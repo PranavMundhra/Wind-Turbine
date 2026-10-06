@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "windturbine"
+version = "0.1.0"
+description = "Normal-behaviour autoencoders for CARE to Compare Wind Farm C, and a route to federated learning"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["numpy", "pandas", "pyyaml"]
+
+[project.optional-dependencies]
+# TensorFlow is only needed to train; scoring/audit/config tests run without it.
+train = ["tensorflow", "scikit-learn", "scipy", "pyarrow"]
+eda = ["matplotlib", "seaborn", "statsmodels", "scikit-learn", "scipy"]
+dev = ["pytest", "ruff", "nbstripout", "pre-commit"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+src = ["src", "tests", "scripts"]
+extend-exclude = ["notebooks"]

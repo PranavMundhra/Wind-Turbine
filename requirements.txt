@@ -1,0 +1,13 @@
+# Unpinned on purpose: the TensorFlow / Keras versions used on Kaggle were never
+# recorded. Pin them after running `pip freeze` in the Kaggle session that produced
+# the published numbers, then commit the result as requirements.lock.
+numpy
+pandas
+pyyaml
+scikit-learn
+scipy
+pyarrow
+tensorflow
+matplotlib
+seaborn
+statsmodels

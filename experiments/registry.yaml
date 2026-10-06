@@ -1,0 +1,209 @@
+# Single source of truth for every experiment in this repo.
+#
+# scripts/check_registry.py validates this file against the repo (files exist, no
+# dependency cycles, every notebook / config / experiment doc is registered).
+# scripts/render_graph.py generates the graph in docs/experiments/EXPERIMENT_GRAPH.md
+# and the index table in docs/experiments/README.md from it. Edit here, then run
+# `make graph`.
+#
+# depends_on   = hard edge: needs this experiment's outputs, or its result as a gate
+# compares_with = soft edge: the baseline this experiment is judged against
+# status       = done | done-unverified (numbers in prose only) | partial | planned
+# importance   = gate | headline | baseline | supporting
+
+experiments:
+  - id: E00
+    title: Data cache
+    kind: data
+    phase: R
+    status: done
+    importance: supporting
+    question: Parse the 58 Farm C event CSVs once into parquet so every run reads identical inputs.
+    notebook: notebooks/00_build_cache.ipynb
+    config: null
+    doc: docs/experiments/E00_data_cache.md
+    depends_on: []
+    compares_with: []
+    produces: [event_parquet_cache, cache_manifest, event_to_asset_map]
+
+  - id: E01
+    title: Exploratory data analysis
+    kind: analysis
+    phase: R
+    status: done
+    importance: supporting
+    question: Which channels are usable, redundant or implausible, and is the avg-only feature set justified?
+    notebook: notebooks/01_eda.ipynb
+    config: null
+    doc: docs/experiments/E01_eda.md
+    depends_on: []
+    compares_with: []
+    produces: [channel_quality, recommended_drop_columns, feature_schema]
+
+  - id: E02
+    title: Leakage audit
+    kind: analysis
+    phase: R
+    status: done
+    importance: gate
+    question: Are rows duplicated across event files, and if so, exactly how?
+    notebook: notebooks/02_leakage_audit.ipynb
+    config: null
+    doc: docs/experiments/E02_leakage_audit.md
+    depends_on: []
+    compares_with: []
+    produces: [duplicate_pair_evidence, fingerprint_method]
+
+  - id: E03
+    title: Leak-free per-turbine client dataset
+    kind: data
+    phase: "0"
+    status: partial
+    importance: gate
+    question: Build 22 per-turbine partitions with the arms' preprocessing and no training row that appears in any of that turbine's prediction windows.
+    notebook: notebooks/20_federated_clients.ipynb
+    config: configs/clients.yaml
+    doc: docs/experiments/E03_client_dataset.md
+    depends_on: [E00, E01, E02]
+    compares_with: []
+    produces: [client_partitions, client_manifest, feature_schema]
+
+  - id: A
+    title: Isolated, one model per event
+    kind: baseline
+    phase: done
+    status: done-unverified
+    importance: baseline
+    question: How well does the paper-faithful per-event autoencoder score?
+    notebook: notebooks/10_arm_isolated.ipynb
+    config: configs/arm_isolated.yaml
+    doc: docs/experiments/A_isolated_per_event.md
+    depends_on: [E00]
+    compares_with: []
+    produces: [results, per_event, row_scores]
+
+  - id: B
+    title: Pooled, one fleet-wide model
+    kind: baseline
+    phase: done
+    status: done-unverified
+    importance: baseline
+    question: Does one model trained on the whole fleet beat per-event models?
+    notebook: notebooks/11_arm_pooled.ipynb
+    config: configs/arm_pooled.yaml
+    doc: docs/experiments/B_pooled_fleet.md
+    depends_on: [E00, E02]
+    compares_with: [A]
+    produces: [results, per_event, row_scores, leakage_per_event]
+
+  - id: C
+    title: Pooled, leaked rows removed
+    kind: arm
+    phase: "0"
+    status: planned
+    importance: gate
+    question: How much of the A-B gap is contamination and how much is specialisation?
+    notebook: null
+    config: configs/arm_pooled_dedup.yaml
+    doc: docs/experiments/C_pooled_dedup.md
+    depends_on: [B, E02]
+    compares_with: [B, A]
+    produces: [results, per_event, row_scores]
+
+  - id: D
+    title: Local per-turbine, no collaboration
+    kind: arm
+    phase: "0"
+    status: planned
+    importance: gate
+    question: How well does a turbine do alone? This is the lower anchor every federated arm must beat.
+    notebook: null
+    config: configs/arm_local_turbine.yaml
+    doc: docs/experiments/D_local_per_turbine.md
+    depends_on: [E03]
+    compares_with: [A, C]
+    produces: [results, per_event, row_scores]
+
+  - id: F1
+    title: FedAvg, global model, local thresholds
+    kind: federated
+    phase: "2"
+    status: planned
+    importance: gate
+    question: Does naive federated averaging reproduce the centralised result, as predicted?
+    notebook: null
+    config: configs/fed_fedavg.yaml
+    doc: docs/experiments/F1_fedavg.md
+    depends_on: [E03, C]
+    compares_with: [C, D]
+    produces: [results, per_event, row_scores, round_log]
+
+  - id: F2
+    title: Personalised FL, shared encoder, local decoder
+    kind: federated
+    phase: "3"
+    status: planned
+    importance: headline
+    question: Can sharing the encoder and personalising the decoder beat both centralised and local-only training?
+    notebook: null
+    config: configs/fed_personalised.yaml
+    doc: docs/experiments/F2_personalised_fl.md
+    depends_on: [F1, D]
+    compares_with: [C, D, A]
+    produces: [results, per_event, row_scores, round_log]
+
+  - id: F3
+    title: FedProx mu sweep
+    kind: federated
+    phase: "4"
+    status: planned
+    importance: headline
+    question: What does the curve between local-only and fully shared training look like?
+    notebook: null
+    config: configs/fed_fedprox.yaml
+    doc: docs/experiments/F3_fedprox_sweep.md
+    depends_on: [F1, D]
+    compares_with: [C, D, F2]
+    produces: [results_per_mu, care_vs_mu_curve]
+
+  - id: F4
+    title: Secure aggregation and differential privacy
+    kind: federated
+    phase: "5"
+    status: planned
+    importance: supporting
+    question: What does formal privacy cost in CARE?
+    notebook: null
+    config: configs/fed_private.yaml
+    doc: docs/experiments/F4_private_fl.md
+    depends_on: [F2, F3]
+    compares_with: [F2, F3]
+    produces: [care_vs_epsilon_curve]
+
+  - id: S
+    title: Seed robustness and confidence intervals
+    kind: robustness
+    phase: "0"
+    status: planned
+    importance: gate
+    question: Which differences between arms are larger than run-to-run noise (about 0.013 CARE)?
+    notebook: null
+    config: null
+    doc: docs/experiments/S_seed_robustness.md
+    depends_on: [A, B]
+    compares_with: []
+    produces: [seed_table, turbine_bootstrap_ci]
+
+  - id: X
+    title: Ablations
+    kind: ablation
+    phase: any
+    status: planned
+    importance: supporting
+    question: Are the untested assumptions (bottleneck width, earliness weighting, threshold quantile, split mode, scaler scope) affecting conclusions?
+    notebook: null
+    config: null
+    doc: docs/experiments/X_ablations.md
+    depends_on: [A]
+    compares_with: [A, D, F1]
+    produces: [ablation_table]

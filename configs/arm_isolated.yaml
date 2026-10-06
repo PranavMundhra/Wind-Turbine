@@ -1,0 +1,2 @@
+# Arm A: 58 models, one per event dataset. Paper-faithful, immune to cross-file duplication.
+arm: isolated

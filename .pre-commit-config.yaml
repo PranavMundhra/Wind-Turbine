@@ -1,0 +1,12 @@
+repos:
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.7.1
+    hooks:
+      - id: nbstripout
+        # Do NOT enable on notebooks/02_leakage_audit.ipynb until its outputs are
+        # exported to results/leakage_audit/ (they are the only stored evidence).
+        exclude: ^notebooks/(02_leakage_audit|01_eda)\.ipynb$
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff

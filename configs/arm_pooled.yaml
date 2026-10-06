@@ -1,0 +1,2 @@
+# Arm B: one fleet-wide model; validation holds out whole turbines (val_fraction of 22 -> 3).
+arm: pooled

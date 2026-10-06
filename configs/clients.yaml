@@ -1,0 +1,7 @@
+# E03: per-turbine client partitions. Inherits preprocessing from base.yaml so the
+# clients see exactly the features, normal mask and split the arms use.
+arm: clients
+extra:
+  client_unit: asset_id            # ADR 0001
+  remove_rows_seen_in_prediction: true   # within-turbine leakage (see E03 doc)
+  fingerprint_decimals: 6          # same as the audit and the arms

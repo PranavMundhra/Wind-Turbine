@@ -1,0 +1,21 @@
+# Shared by every arm. Values mirror the constants at the top of the arm notebooks.
+farm: "Wind Farm C"
+dataset_root: "data/raw"        # set per environment; the notebooks hard-code a Kaggle path
+cache_dir: "data/cache"
+use_avg_only: true
+angle_transform: true
+max_nan_fraction: 0.30
+hidden_layers: [133, 83, 20, 83, 133]   # paper Table 3, Wind Farm C
+learning_rate: 0.0056
+use_lr_plateau: true
+batch_size: 64
+max_epochs: 200
+early_stop_patience: 10
+seed: 42
+val_fraction: 0.15
+val_split_mode: blocked
+val_block_hours: 120
+score_quantile: 0.99
+criticality_threshold: 72
+care_weights: [1, 1, 1, 2]
+output_dir: "results/runs"

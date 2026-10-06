@@ -1,0 +1,7 @@
+# Arm C: identical to Arm B except training rows whose fingerprint appears in ANY
+# event's prediction window are removed. One change only, so B vs C isolates contamination.
+arm: pooled_dedup
+extra:
+  remove_rows_seen_in_prediction: true
+  fingerprint_decimals: 6
+  unique_training_rows: false      # the X6 ablation turns this on

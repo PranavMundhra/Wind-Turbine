@@ -1,0 +1,12 @@
+# F2: shared encoder (FedAvg), decoder fine-tuned locally each round.
+arm: fed_personalised
+extra:
+  framework: flwr
+  strategy: fedavg_partial
+  shared_layers: [encode1, encode2, bottleneck]
+  local_layers: [decode1, decode2, output]
+  local_finetune_epochs: TBD
+  n_clients: 22
+  rounds: 100
+  scaler: local
+  threshold: local

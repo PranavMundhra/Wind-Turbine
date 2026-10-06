@@ -1,0 +1,11 @@
+# F3: FedProx sweep. mu = 0 approaches Arm D; large mu approaches one global model (F1 / Arm C).
+arm: fedprox
+extra:
+  framework: flwr
+  strategy: fedprox
+  mu_grid: [0.0, 0.001, 0.01, 0.1, 1.0, 10.0]   # starting grid; refine around the knee
+  n_clients: 22
+  rounds: 100
+  local_epochs: TBD
+  scaler: local
+  threshold: local

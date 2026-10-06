@@ -1,0 +1,12 @@
+# F1: FedAvg over 22 turbine clients. Values marked TBD are chosen in the run, not here.
+arm: fedavg
+extra:
+  framework: flwr                  # Flower, simulation mode
+  strategy: fedavg
+  n_clients: 22
+  fraction_fit: 1.0                # cross-silo: every client every round
+  rounds: 100                      # companion PDF's communication estimate
+  local_epochs: TBD
+  aggregation_weight: n_rows_after_leak_removal
+  scaler: local                    # ADR 0002
+  threshold: local                 # ADR 0002

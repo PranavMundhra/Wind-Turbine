@@ -1,0 +1,6 @@
+# Arm D: one model per turbine (22), trained on that turbine's leak-free rows from E03.
+# The no-collaboration anchor for every federated arm.
+arm: local_turbine
+extra:
+  client_unit: asset_id
+  threshold_scope: turbine

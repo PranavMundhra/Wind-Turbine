@@ -1,0 +1,7 @@
+# F4: secure aggregation first (should not change CARE), then differential privacy.
+arm: fed_private
+extra:
+  base_strategy: best_of_F2_F3
+  secure_aggregation: true
+  dp_clip_norm: TBD
+  dp_noise_multiplier_grid: TBD    # report CARE against the resulting epsilon
