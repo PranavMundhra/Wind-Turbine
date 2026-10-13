@@ -100,10 +100,10 @@ experiments:
     title: Pooled, leaked rows removed
     kind: arm
     phase: "0"
-    status: planned
+    status: done
     importance: gate
     question: How much of the A-B gap is contamination and how much is specialisation?
-    notebook: null
+    notebook: notebooks/12_arm_pooled_dedup.ipynb
     config: configs/arm_pooled_dedup.yaml
     doc: docs/experiments/C_pooled_dedup.md
     depends_on: [B, E02]
@@ -114,10 +114,10 @@ experiments:
     title: Local per-turbine, no collaboration
     kind: arm
     phase: "0"
-    status: planned
+    status: done
     importance: gate
     question: How well does a turbine do alone? This is the lower anchor every federated arm must beat.
-    notebook: null
+    notebook: notebooks/13_arm_local_turbine.ipynb
     config: configs/arm_local_turbine.yaml
     doc: docs/experiments/D_local_per_turbine.md
     depends_on: [E03]

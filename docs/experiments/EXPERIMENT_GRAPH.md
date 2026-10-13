@@ -1,6 +1,6 @@
 # Experiment graph
 
-The headline experiments (F2, F3) sit behind three unrun gates: **C**, **D** (which needs the leak-free client dataset E03) and **F1**. The leakage audit E02 is the one finished gate, and it feeds all of them.
+The headline experiments (F2, F3) sit behind three gates: **C** and **D** (both run, 3 seeds each) and **F1** (unrun). The leakage audit E02 is the one finished gate, and it feeds all of them.
 
 <!-- generated:start -->
 ```mermaid
@@ -16,8 +16,8 @@ flowchart LR
   end
   subgraph lane_0["Phase 0: clean baselines, client data, noise"]
     E03["E03: Leak-free per-turbine client dataset<br/>partial · unblocks 5"]
-    C["C: Pooled, leaked rows removed<br/>planned · unblocks 4"]
-    D["D: Local per-turbine, no collaboration<br/>planned · unblocks 3"]
+    C["C: Pooled, leaked rows removed<br/>done · unblocks 4"]
+    D["D: Local per-turbine, no collaboration<br/>done · unblocks 3"]
     S["S: Seed robustness and confidence intervals<br/>planned · unblocks 0"]
   end
   subgraph lane_fl["Phases 2-5: federated arms"]
@@ -78,10 +78,10 @@ flowchart LR
 | Comparison | Question it answers | Status |
 | --- | --- | --- |
 | B vs A | Is one fleet model better than per-event models? (confounded: contamination and specialisation differ at once) | done: 0.583 vs 0.628 |
-| C vs B | What was contamination worth? | needs C |
-| C vs A | How much does specialisation matter, cleanly? | needs C |
-| D vs A | Is per-turbine specialisation as good as per-event? | needs D |
-| D vs C | Local-only vs centralised: the two ends of the federated dial | needs C, D |
+| C vs B | What was contamination worth? | C done (0.543 at seed 42, 0.326 ± 0.288 over 3 seeds); not readable until B is re-run at the same seeds here (S): the 3-turbine holdout dominates |
+| C vs A | How much does specialisation matter, cleanly? | done: C 0.326 ± 0.288 vs A 0.628; pooled with a global threshold is far worse and unstable |
+| D vs A | Is per-turbine specialisation as good as per-event? | done: D 0.611 ± 0.013 vs A 0.628, about equal |
+| D vs C | Local-only vs centralised: the two ends of the federated dial | done: D 0.611 well above C 0.326 |
 | F1 vs C | Does federation itself cost anything? (predicted: no) | needs F1 |
 | F2 vs max(C, D) | Does personalised FL beat both ends? (headline) | needs F2 |
 | F3 curve between D and C | Where on the sharing dial is the optimum? (headline) | needs F3 |

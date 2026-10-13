@@ -13,6 +13,17 @@ These numbers are reported in [`docs/MODEL_DOCUMENTATION.md`](docs/MODEL_DOCUMEN
 the arm notebooks in this repo have no stored outputs, so they are not yet reproducible
 from the repo alone. Run-to-run noise is about ±0.013 CARE.
 
+The Phase 0 arms C and D have been run at 3 seeds each (CPU, run manifests under `results/runs/`):
+
+| | Arm C: pooled, leaked rows removed | Arm D: one model per turbine, leak-free |
+|---|---|---|
+| CARE, mean ± sd of 3 seeds | 0.326 ± 0.288 | 0.611 ± 0.013 |
+| CARE at seed 42 | 0.543 | 0.625 |
+
+D roughly matches A, and it is the anchor federated arms must beat. C's spread comes from B's
+three-turbine validation holdout, not from the leak removal: details in
+[C](docs/experiments/C_pooled_dedup.md) and [D](docs/experiments/D_local_per_turbine.md).
+
 **Key finding:** the published data duplicates rows across event files. 25.4% of the pooled
 arm's evaluation rows were also in its training set. The evidence is in
 [`results/leakage_audit/`](results/leakage_audit/). **Next step:** federated learning with

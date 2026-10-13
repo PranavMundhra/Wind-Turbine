@@ -4,3 +4,5 @@ arm: local_turbine
 extra:
   client_unit: asset_id
   threshold_scope: turbine
+  remove_rows_seen_in_prediction: true   # E03 rule: this turbine's prediction windows
+  fingerprint_decimals: 6

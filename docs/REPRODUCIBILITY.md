@@ -16,7 +16,8 @@ The original repo had three kinds of problem: structure (copied code, no package
 | 10 | EDA outputs consumed by nothing; feature choices live in code | `feature_schema.json` as an explicit artifact used by all arms and clients | [E01](experiments/E01_eda.md) | Specified |
 | 11 | Three audit outputs written by the notebook are missing from the repo | Re-run E02 with a manifest and commit them | [E02](experiments/E02_leakage_audit.md) | Open |
 | 12 | Single seed per arm | 3+ seeds and turbine-level bootstrap | [S](experiments/S_seed_robustness.md) | Specified |
-| 13 | Per-row scores never saved, so every threshold or earliness change needs retraining | `scores.parquet` in the run contract | `runs.py` docstring, [X](experiments/X_ablations.md) | Specified |
+| 13 | Per-row scores never saved, so every threshold or earliness change needs retraining | `scores.parquet` in the run contract | `runs.py` docstring, [X](experiments/X_ablations.md) | Done for C and D (`runs.write_scores`) |
+| 14 | Under pandas >= 3, text columns are no longer `object`, so the shared angle detector silently found no angle columns (238 model inputs instead of 243) | `pd.api.types.is_string_dtype` in the shared feature-selection cell | every arm notebook and the cache builder | Done |
 
 ## Reproducing a run
 

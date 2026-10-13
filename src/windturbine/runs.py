@@ -28,6 +28,7 @@ from importlib import metadata
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import yaml
 
 RESULT_KEYS = ("coverage", "earliness", "reliability", "accuracy", "care", "tp", "fp", "fn", "tn")
@@ -148,3 +149,19 @@ def write_results(run_dir: str | Path, results: dict, per_event=None) -> None:
         if cols:
             raise KeyError(f"per_event is missing columns {cols}")
         per_event.to_csv(run_dir / "per_event.csv", index=False)
+
+
+def from_evaluate_care(results: dict, per_event):
+    """Map the arm notebooks' ``evaluate_care`` output onto the contract: lower-case keys
+    plus tp/fp/fn/tn for results.json; ``event_label`` and ``max_criticality`` for per_event.csv."""
+    res = {k.lower(): v for k, v in results.items()} | results["event_confusion"]
+    pe = per_event.assign(event_label=per_event["is_anomaly"].map({1: "anomaly", 0: "normal"}),
+                          max_criticality=per_event["peak_criticality"])
+    return res, pe
+
+
+def write_scores(run_dir: str | Path, records: dict) -> None:
+    """scores.parquet: one row per scored timestamp of every event's prediction window."""
+    pd.concat([pd.DataFrame({"event_id": eid, "time_stamp": r["time_stamp"], "normal_mask": r["normal_mask"],
+                             "score": r["scores"], "prediction": r["prediction"]})
+               for eid, r in records.items()]).to_parquet(Path(run_dir) / "scores.parquet", index=False)

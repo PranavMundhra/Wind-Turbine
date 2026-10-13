@@ -43,7 +43,7 @@ The last row is the important correction. Partitioning by turbine removes leakag
 Accept when a test confirms zero fingerprints shared between any client's training rows and any prediction row of the same client, and every client has the same feature columns in the same order.
 
 ## Results
-Not run in the leak-free form.
+Not run in the leak-free form as files on disk. [Arm D](D_local_per_turbine.md) applies the rules above in memory (`notebooks/13_arm_local_turbine.ipynb`), and its `client_manifest.csv` holds the per-client row counts before and after leak removal that this experiment specifies.
 
 ## Risks and open questions
 - Leak removal shrinks some clients; record by how much, because FedAvg weights clients by row count.

@@ -11,3 +11,4 @@ results/runs/*
 *.parquet
 *.h5
 *.keras
+.env

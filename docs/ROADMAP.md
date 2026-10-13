@@ -5,7 +5,7 @@ Experiments are defined in [`experiments/`](experiments/README.md) and drawn in 
 | Phase | Experiments | Exit test | Status |
 |---|---|---|---|
 | R | [E00](experiments/E00_data_cache.md), [E01](experiments/E01_eda.md), [E02](experiments/E02_leakage_audit.md); extract `data` and `models` into the package | A and B re-run from configs with run manifests, matching 0.628 / 0.583 within noise | Package partly extracted; E00-E02 done |
-| 0 | [E03](experiments/E03_client_dataset.md), [C](experiments/C_pooled_dedup.md), [D](experiments/D_local_per_turbine.md), [S](experiments/S_seed_robustness.md) | 22 leak-free clients on one feature schema; contamination vs specialisation separated; both ends of the federated dial measured at 3 seeds | E03 builder exists but is not leak-free; the rest not started |
+| 0 | [E03](experiments/E03_client_dataset.md), [C](experiments/C_pooled_dedup.md), [D](experiments/D_local_per_turbine.md), [S](experiments/S_seed_robustness.md) | 22 leak-free clients on one feature schema; contamination vs specialisation separated; both ends of the federated dial measured at 3 seeds | C and D done at 3 seeds (D applies the E03 rules in memory; the on-disk E03 builder is not yet leak-free); S not started |
 | 1 | Federated plumbing: Flower simulation, per-client CARE counts reported to the server | FedAvg equals centralised gradient descent on a toy model (see F1) | Not started |
 | 2 | [F1](experiments/F1_fedavg.md) | F1 ≈ C confirms the stated prediction | Not started |
 | 3 | [F2](experiments/F2_personalised_fl.md) | F2 above both C and D | Not started |

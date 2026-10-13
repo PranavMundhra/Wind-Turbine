@@ -11,8 +11,8 @@ Every experiment has an ID, an entry in [`experiments/registry.yaml`](../../expe
 | E03 | Leak-free per-turbine client dataset | 0 | partial | gate | E00, E01, E02 | 5 | [E03_client_dataset.md](E03_client_dataset.md) |
 | A | Isolated, one model per event | done | done-unverified | baseline | E00 | 2 | [A_isolated_per_event.md](A_isolated_per_event.md) |
 | B | Pooled, one fleet-wide model | done | done-unverified | baseline | E00, E02 | 6 | [B_pooled_fleet.md](B_pooled_fleet.md) |
-| C | Pooled, leaked rows removed | 0 | planned | gate | B, E02 | 4 | [C_pooled_dedup.md](C_pooled_dedup.md) |
-| D | Local per-turbine, no collaboration | 0 | planned | gate | E03 | 3 | [D_local_per_turbine.md](D_local_per_turbine.md) |
+| C | Pooled, leaked rows removed | 0 | done | gate | B, E02 | 4 | [C_pooled_dedup.md](C_pooled_dedup.md) |
+| D | Local per-turbine, no collaboration | 0 | done | gate | E03 | 3 | [D_local_per_turbine.md](D_local_per_turbine.md) |
 | F1 | FedAvg, global model, local thresholds | 2 | planned | gate | E03, C | 3 | [F1_fedavg.md](F1_fedavg.md) |
 | F2 | Personalised FL, shared encoder, local decoder | 3 | planned | headline | F1, D | 1 | [F2_personalised_fl.md](F2_personalised_fl.md) |
 | F3 | FedProx mu sweep | 4 | planned | headline | F1, D | 1 | [F3_fedprox_sweep.md](F3_fedprox_sweep.md) |

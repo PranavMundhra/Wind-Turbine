@@ -9,6 +9,7 @@ from windturbine.paths import resolve_data_root
 from windturbine.runs import (
     RESULT_KEYS,
     config_hash,
+    from_evaluate_care,
     new_run_dir,
     set_seeds,
     write_manifest,
@@ -47,6 +48,18 @@ def test_result_contract_is_enforced(tmp_path):
         write_results(tmp_path, {"care": 0.6})
     with pytest.raises(KeyError):
         write_results(tmp_path, _results(0.6), pd.DataFrame({"event_id": [1]}))
+
+
+def test_evaluate_care_output_meets_the_contract(tmp_path):
+    # the shape the arm notebooks' evaluate_care() returns
+    results = {"Coverage": 0.4, "Earliness": 0.3, "Reliability": 0.6, "Accuracy": 0.9, "CARE": 0.62,
+               "event_confusion": {"tp": 1, "fp": 0, "fn": 1, "tn": 2}}
+    per_event = pd.DataFrame({"event_id": [1, 2], "asset_id": [10, 10], "is_anomaly": [1, 0],
+                              "detected": [1, 0], "peak_criticality": [90, 3]})
+    res, pe = from_evaluate_care(results, per_event)
+    write_results(tmp_path, res, pe)  # raises if a contract key or column is missing
+    assert res["care"] == 0.62 and res["tp"] == 1
+    assert pe.event_label.tolist() == ["anomaly", "normal"] and pe.max_criticality.tolist() == [90, 3]
 
 
 def test_compare_runs_summarises_and_diffs(tmp_path):
