@@ -15,13 +15,17 @@
 <!-- generated:end -->
 
 ## Question
-Does naive federated averaging reproduce the centralised result, as the companion PDF predicts?
+How does federated averaging compare with central training on exactly the same prepared client data?
 
 ## Why it matters
-The PDF states the prediction before running: FedAvg's fixed point roughly minimises the weighted average of client losses, which is what the pooled arm optimised, so FedAvg should land near the centralised score. Confirming it shows the gap is caused by the shared-model objective, not by the data-sharing mechanism, and it validates the federated code before F2 and F3 build on it.
+Federated and centralized training should first be checked on a restricted gradient-step fixture. That identity does not guarantee equal CARE with multiple local epochs, Adam or nonconvex optimization. Historical C also differs in validation membership, scaling and calibration, so C alone cannot validate the federated implementation.
 
 ## Method: change from C
-Same leak-free data as D (22 turbine clients from [E03](E03_client_dataset.md)), but trained as one global model by FedAvg in Flower simulation, every client every round, clients weighted by row count after leak removal. Scaler and threshold stay local ([ADR 0002](../adr/0002-local-scaler-and-threshold.md)). Each client reports per-event TP/FP/FN/TN; the server computes CARE.
+Load the exact exported [E03](E03_client_dataset.md) partitions used by regenerated D through `windturbine.data.clients.load_client_dataset`. No client splits, feature selection or scaler refitting occur inside FL. Train one global model in Flower simulation, every client every round, with weights equal to actual retained fitting rows. Keep the agreed fixed input width, local scaling and local thresholds ([ADR 0002](../adr/0002-local-scaler-and-threshold.md)). Inactive inputs are zero-filled; all output dimensions contribute to loss and anomaly scores as in D.
+
+Create a **matched centralized comparator** by training the same model on the union of those exact transformed fitting partitions, using the same calibration sets and local threshold rule. State initialization, optimizer, selection policy and training budget. Historical C remains an additional reference, not the implementation acceptance test.
+
+Clients report unrounded per-event component values and event decisions. The server concatenates those event tables and calls `windturbine.scoring.aggregate_event_metrics` once. Event confusion counts alone cannot reconstruct Earliness or the other pointwise components. Do not average client CARE or Reliability, and do not weight CARE by training rows. Event IDs must be unique and the received cohort must match the expected evaluation events.
 
 Implementation check before the real run: with full participation and one full-batch gradient step per round, FedAvg equals centralised gradient descent. Test that on a toy model first.
 
@@ -34,12 +38,18 @@ Implementation check before the real run: with full participation and one full-b
 ## Decision rule
 | Result | Reading |
 | --- | --- |
-| F1 ≈ C (within noise) | Prediction confirmed; federation itself costs nothing here. Proceed to F2. |
-| F1 well below C | Client drift or a bug; check the toy-equivalence test and local-epoch count before going further. |
-| F1 above C | Local scalers/thresholds are already doing personalisation work; measure that with ablation X5. |
+| Restricted one-step gradient test and metric parity pass | The tested mechanics are correct; start an exploratory real-data pilot. |
+| F1 matches the matched comparator within a predeclared practical margin | Report equivalence only with sufficient paired uncertainty evidence. |
+| F1 differs from the matched comparator | Investigate local-step and optimizer effects; a difference is not automatically a software bug. |
+| F1 differs from historical C | Report the preprocessing, membership and calibration differences; do not assign the whole gap to federation. |
 
 ## Results
 Not run.
+
+The new export-backed D seed-42 reference has now completed with CARE 0.639852
+(14 detected anomalies, 6 false alarms). Its [saved execution evidence](../../results/evidence/D/20261015T014242Z_2525b30e_s42/README.md)
+records the E03 dataset hash. Use that same export for the initial FL pilot; the
+single D run does not replace the matched centralized comparator or seed study.
 
 ## Risks and open questions
 - C and F1 differ in scaler scope (global vs local) as well as training mechanism; X5 separates the two.

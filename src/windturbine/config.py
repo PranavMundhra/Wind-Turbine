@@ -75,7 +75,7 @@ def load_config(*paths: str | Path) -> Config:
     cfg = Config()
     known = {f.name for f in fields(Config)}
     for p in paths:
-        data = yaml.safe_load(Path(p).read_text()) or {}
+        data = yaml.safe_load(Path(p).read_text(encoding="utf-8")) or {}
         unknown = set(data) - known
         if unknown:
             raise KeyError(f"{p}: unknown config keys {sorted(unknown)}")

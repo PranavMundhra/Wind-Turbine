@@ -58,7 +58,7 @@ experiments:
     title: Leak-free per-turbine client dataset
     kind: data
     phase: "0"
-    status: partial
+    status: done
     importance: gate
     question: Build 22 per-turbine partitions with the arms' preprocessing and no training row that appears in any of that turbine's prediction windows.
     notebook: notebooks/20_federated_clients.ipynb

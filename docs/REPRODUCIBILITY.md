@@ -12,7 +12,7 @@ The original repo had three kinds of problem: structure (copied code, no package
 | 6 | Run-to-run noise of 0.013 CARE from cuDNN | `set_seeds(seed, deterministic=True)` enables TensorFlow op determinism when available | `runs.set_seeds` | Done; untested on GPU |
 | 7 | Docs linked a `figs/` folder and scripts that did not exist | Every relative markdown link checked in CI | `scripts/check_registry.py` | Done |
 | 8 | No list of experiments; nothing tied notebooks, configs and docs together | Experiment registry; every notebook's first cell names its experiment ID | `experiments/registry.yaml` | Done |
-| 9 | Client builder disconnected from the arms (own CSV parsing, own split, no feature schema, no leak removal) | Spec rewritten as E03 | [E03](experiments/E03_client_dataset.md) | Specified; not implemented |
+| 9 | Client builder disconnected from the arms (own CSV parsing, own split, no feature schema, no leak removal) | Shared E03 build/export/load path, consumed directly by updated D | [E03](experiments/E03_client_dataset.md), [Kaggle bridge](CLIENT_BRIDGE.md) | Implemented and tested; full-cohort verified consumption and D training recorded in the 15 October Kaggle notebook. Original full-precision artifacts still need archiving. |
 | 10 | EDA outputs consumed by nothing; feature choices live in code | `feature_schema.json` as an explicit artifact used by all arms and clients | [E01](experiments/E01_eda.md) | Specified |
 | 11 | Three audit outputs written by the notebook are missing from the repo | Re-run E02 with a manifest and commit them | [E02](experiments/E02_leakage_audit.md) | Open |
 | 12 | Single seed per arm | 3+ seeds and turbine-level bootstrap | [S](experiments/S_seed_robustness.md) | Specified |

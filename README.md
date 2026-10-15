@@ -11,18 +11,30 @@ strategies are compared under identical preprocessing, architecture and scoring:
 
 These numbers are reported in [`docs/MODEL_DOCUMENTATION.md`](docs/MODEL_DOCUMENTATION.md);
 the arm notebooks in this repo have no stored outputs, so they are not yet reproducible
-from the repo alone. Run-to-run noise is about ±0.013 CARE.
+from the repo alone. Two historical pooled runs differed by 0.013 CARE; that is
+not an established universal noise threshold.
 
-The Phase 0 arms C and D have been run at 3 seeds each (CPU, run manifests under `results/runs/`):
+The historical Phase 0 arms C and D were reported at 3 seeds each (CPU; full run artifacts are not included in this checkout):
 
 | | Arm C: pooled, leaked rows removed | Arm D: one model per turbine, leak-free |
 |---|---|---|
 | CARE, mean ± sd of 3 seeds | 0.326 ± 0.288 | 0.611 ± 0.013 |
 | CARE at seed 42 | 0.543 | 0.625 |
 
-D roughly matches A, and it is the anchor federated arms must beat. C's spread comes from B's
-three-turbine validation holdout, not from the leak removal: details in
+D's historical result is close to A, and C's results are sensitive to the three-turbine
+validation holdout. Matched reruns are needed to identify the causes: details in
 [C](docs/experiments/C_pooled_dedup.md) and [D](docs/experiments/D_local_per_turbine.md).
+
+The updated D notebook has now completed a Kaggle run using the shared E03 exports
+and corrected evaluation eligibility. Seed 42 achieved **CARE 0.639852**, detecting
+**14 of 27 anomalies**, with **6 false alarms** across 31 normal events. All 22
+clients and 58 events completed. The [saved run evidence](results/evidence/D/20261015T014242Z_2525b30e_s42/README.md)
+includes the executed notebook and extracted event table.
+
+This is one run of the new pipeline; the earlier table remains historical.
+**Federated implementation and an exploratory pilot can proceed**, with restricted
+SGD-equivalence, cohort/metric-parity checks and a matched centralized comparator
+required before interpreting results. See the [transition assessment](docs/FEDERATED_TRANSITION_2026_10_15.md).
 
 **Key finding:** the published data duplicates rows across event files. 25.4% of the pooled
 arm's evaluation rows were also in its training set. The evidence is in
@@ -41,7 +53,7 @@ against it. What was wrong with the original layout and how it is fixed:
 ## Layout
 
 ```
-src/windturbine/   reusable code (config, scoring, audit, runs, paths done; data, models, federated TODO)
+src/windturbine/   reusable code (client data, config, scoring, audit, runs, paths; models/federated still partial)
 experiments/       registry.yaml: every experiment, its files and its dependencies
 configs/           YAML run configs (base + per arm)
 notebooks/         00 cache, 01 EDA, 02 leakage audit, 10 isolated, 11 pooled, 20 federated clients
@@ -59,6 +71,12 @@ pip install -e ".[train]"    # adds TensorFlow etc. for the notebooks
 make check test
 ```
 
+For Kaggle, run [`notebooks/20_federated_clients.ipynb`](notebooks/20_federated_clients.ipynb)
+on CPU with the source dataset and the packaged bridge attached. It builds immutable,
+verified clients; the updated Arm D loads those exact arrays. See the
+[Kaggle instructions and federated handoff](docs/CLIENT_BRIDGE.md). Build the source
+bundle with `python scripts/package_kaggle_bridge.py`; internet is optional.
+
 The data is the CARE to Compare Wind Farm C set (Kaggle:
 `azizkasimov/wind-turbine-scada-data-for-early-fault-detection`). Set `WT_DATA_ROOT` or `dataset_root` in `configs/base.yaml`; the notebooks still contain the Kaggle path until they adopt `windturbine.paths`.
 
@@ -66,5 +84,9 @@ The data is the CARE to Compare Wind Farm C set (Kaggle:
 
 Restructure in progress (roadmap phase R). Done and tested: `scoring`, `audit`, `config`, `runs`, `paths`, the experiment registry and its checks.
 The extracted functions were checked against the notebook originals on random inputs.
-Not done: `data`, `models`, `runners`, `federated`, a pinned environment (the TensorFlow
+The E03 data bridge and D integration are implemented and tested locally. The supplied
+Kaggle execution records verified loading of all 22 clients and completed the new D
+baseline at seed 42. Full-precision run artifacts still need archiving; multiple-seed
+matched comparisons and federated training remain outstanding.
+Not done: extraction of the older A/B/C data/model code, `runners`, `federated`, a pinned environment (the TensorFlow
 version used was never recorded), and a LICENSE (the owner must choose one).

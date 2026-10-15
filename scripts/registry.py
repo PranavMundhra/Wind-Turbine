@@ -14,7 +14,7 @@ IMPORTANCE = {"gate", "headline", "baseline", "supporting"}
 
 
 def load(path: Path = REGISTRY) -> list[dict]:
-    return yaml.safe_load(path.read_text())["experiments"]
+    return yaml.safe_load(path.read_text(encoding="utf-8"))["experiments"]
 
 
 def by_id(exps: list[dict]) -> dict[str, dict]:

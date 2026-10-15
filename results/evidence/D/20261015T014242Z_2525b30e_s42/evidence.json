@@ -1,0 +1,124 @@
+{
+  "run_id": "20261015T014242Z_2525b30e_s42",
+  "reported_run_path": "/kaggle/working/results/runs/D/20261015T014242Z_2525b30e_s42",
+  "seed": 42,
+  "recorded_date": "2026-10-15",
+  "origin": "Saved Kaggle execution in arm-d.ipynb supplied locally by the project owner",
+  "source_notebook_sha256": "be98939edb2e5bc4a8fe1bdbaad1a4d7d5275fa78a31c530b8997e57ecbb29e4",
+  "dataset_manifest_sha256": "bb2ed3ffc84adbf79bbba624941090acd91831097f427b38b2e20885d4b0b1d1",
+  "preprocessing_config": {
+    "angle_transform": true,
+    "drop_reactive": false,
+    "farm": "Wind Farm C",
+    "fingerprint_decimals": 6,
+    "max_nan_fraction": 0.3,
+    "normal_status_ids": [
+      0,
+      2
+    ],
+    "power_near_zero_thresh": 0.02,
+    "seed": 42,
+    "use_avg_only": true,
+    "val_block_hours": 120,
+    "val_fraction": 0.15,
+    "val_split_mode": "blocked",
+    "wind_speed_cutin": 3.0,
+    "wind_speed_rated": 12.0
+  },
+  "source_files_match_current_workspace": true,
+  "source_files_verified": 27,
+  "python_error_outputs": [],
+  "n_clients": 22,
+  "n_events": 58,
+  "n_anomaly_events": 27,
+  "n_normal_events": 31,
+  "training_rows": 1845037,
+  "validation_rows": 347569,
+  "prediction_rows": 158528,
+  "eligible_prediction_rows": 139647,
+  "threshold_min": 9.352313041687012,
+  "threshold_max": 16.97184944152832,
+  "event_table_recomputation": {
+    "Coverage": 0.3692066666666667,
+    "Earliness": 0.29463259259259256,
+    "Reliability": 0.6542056074766355,
+    "Accuracy": 0.940607,
+    "CARE": 0.6398517733471789,
+    "support": {
+      "coverage": 27,
+      "earliness": 27,
+      "accuracy": 31
+    },
+    "event_confusion": {
+      "tp": 14,
+      "fp": 6,
+      "fn": 13,
+      "tn": 25
+    },
+    "n_anomaly_events": 27,
+    "n_normal_events": 31
+  },
+  "recomputation_absolute_tolerance": 1e-06,
+  "all_event_decisions_match_peak_criticality_72": true,
+  "execution_utc": {
+    "2": {
+      "iopub.status.busy": "2026-10-15T01:42:20.742775Z",
+      "iopub.execute_input": "2026-10-15T01:42:20.743060Z",
+      "iopub.status.idle": "2026-10-15T01:42:22.482271Z",
+      "shell.execute_reply.started": "2026-10-15T01:42:20.743029Z",
+      "shell.execute_reply": "2026-10-15T01:42:22.481203Z"
+    },
+    "4": {
+      "iopub.status.busy": "2026-10-15T01:42:22.484619Z",
+      "iopub.execute_input": "2026-10-15T01:42:22.485107Z",
+      "iopub.status.idle": "2026-10-15T01:42:42.444986Z",
+      "shell.execute_reply.started": "2026-10-15T01:42:22.485081Z",
+      "shell.execute_reply": "2026-10-15T01:42:42.444077Z"
+    },
+    "6": {
+      "iopub.status.busy": "2026-10-15T01:42:42.449199Z",
+      "iopub.execute_input": "2026-10-15T01:42:42.449746Z",
+      "iopub.status.idle": "2026-10-15T01:42:42.461016Z",
+      "shell.execute_reply.started": "2026-10-15T01:42:42.449722Z",
+      "shell.execute_reply": "2026-10-15T01:42:42.460022Z"
+    },
+    "7": {
+      "iopub.status.busy": "2026-10-15T01:42:42.462181Z",
+      "iopub.execute_input": "2026-10-15T01:42:42.462530Z",
+      "iopub.status.idle": "2026-10-15T01:42:42.490765Z",
+      "shell.execute_reply.started": "2026-10-15T01:42:42.462501Z",
+      "shell.execute_reply": "2026-10-15T01:42:42.489872Z"
+    },
+    "9": {
+      "iopub.status.busy": "2026-10-15T01:42:42.493124Z",
+      "iopub.execute_input": "2026-10-15T01:42:42.493435Z",
+      "iopub.status.idle": "2026-10-15T03:32:17.596978Z",
+      "shell.execute_reply.started": "2026-10-15T01:42:42.493397Z",
+      "shell.execute_reply": "2026-10-15T03:32:17.596060Z"
+    },
+    "11": {
+      "iopub.status.busy": "2026-10-15T03:32:17.598087Z",
+      "iopub.execute_input": "2026-10-15T03:32:17.598436Z",
+      "iopub.status.idle": "2026-10-15T03:32:18.139377Z",
+      "shell.execute_reply.started": "2026-10-15T03:32:17.598414Z",
+      "shell.execute_reply": "2026-10-15T03:32:18.138617Z"
+    }
+  },
+  "evidence_scope": "Notebook-backed completion and numeric consistency; original full-precision run artifacts and E03 payloads are not present locally.",
+  "missing_original_artifacts": [
+    "E03 dataset_manifest.json and client payloads",
+    "D manifest.json",
+    "D results.json (full precision)",
+    "D per_event.csv (full precision)",
+    "D scores.parquet",
+    "D fit_log.csv",
+    "D model_contract.json"
+  ],
+  "artifact_sha256": {
+    "arm-d.executed.ipynb": "be98939edb2e5bc4a8fe1bdbaad1a4d7d5275fa78a31c530b8997e57ecbb29e4",
+    "per_event_display.csv": "a982140e82c8c41e950dae2caeddfaeac3cc1a3aebefe1bfeebf8c9ac7971d14",
+    "results_display.json": "3cfe8848e6c4781cbdeed61fb07cfbe0119b09b223247e48045cc97ed5be3f39",
+    "source_identity.json": "b412a1a9ede8797fcb4ddd9b7526446bd831da5068bea9936f6e52b727307d27",
+    "training_counts_and_thresholds.csv": "2841de26f8e2c309200be27350ce543e5d5a3a819f04fd7ed8c984460343909b"
+  }
+}

@@ -13,9 +13,13 @@ data (CSV -> parquet cache)  ->  library  ->  results/ (runs, leakage_audit)
 | `audit` | done | `row_fingerprints`, `leaked_fraction` |
 | `runs` | done | run directories, `manifest.json`, result contract, `set_seeds`, `config_hash` |
 | `paths` | done | `resolve_data_root` (no hard-coded Kaggle paths) |
-| `data` | TODO | cache, features, normal mask, splits (still in notebooks) |
+| `data` | E03 implemented | `clients`: shared raw parsing, canonical fingerprints, cleaning, fixed schema, local scaling, atomic exports and independent reload checks; D consumes these exports. Older A/B/C helpers still need extraction. |
 | `models` | TODO | autoencoder 243→133→83→20→83→133→243, training loop (still in notebooks) |
 | `federated` | TODO | server, clients, personalisation (roadmap phases 1-5) |
 | `runners` | TODO | CLI entry points per arm |
 
 Experiments: [`experiments/`](experiments/README.md) and `experiments/registry.yaml` at the repo root. Decisions: see `docs/adr/`. Reproducibility fixes: [REPRODUCIBILITY.md](REPRODUCIBILITY.md). Model and results detail: `docs/MODEL_DOCUMENTATION.md`.
+
+Client artifact contract and Kaggle execution: [CLIENT_BRIDGE.md](CLIENT_BRIDGE.md).
+The shared CARE evaluator and event-table aggregation are in `scoring/evaluation.py`.
+No federated trainer is implemented by the client-data bridge.

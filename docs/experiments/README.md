@@ -8,7 +8,7 @@ Every experiment has an ID, an entry in [`experiments/registry.yaml`](../../expe
 | E00 | Data cache | R | done | supporting | none | 11 | [E00_data_cache.md](E00_data_cache.md) |
 | E01 | Exploratory data analysis | R | done | supporting | none | 6 | [E01_eda.md](E01_eda.md) |
 | E02 | Leakage audit | R | done | gate | none | 9 | [E02_leakage_audit.md](E02_leakage_audit.md) |
-| E03 | Leak-free per-turbine client dataset | 0 | partial | gate | E00, E01, E02 | 5 | [E03_client_dataset.md](E03_client_dataset.md) |
+| E03 | Leak-free per-turbine client dataset | 0 | done | gate | E00, E01, E02 | 5 | [E03_client_dataset.md](E03_client_dataset.md) |
 | A | Isolated, one model per event | done | done-unverified | baseline | E00 | 2 | [A_isolated_per_event.md](A_isolated_per_event.md) |
 | B | Pooled, one fleet-wide model | done | done-unverified | baseline | E00, E02 | 6 | [B_pooled_fleet.md](B_pooled_fleet.md) |
 | C | Pooled, leaked rows removed | 0 | done | gate | B, E02 | 4 | [C_pooled_dedup.md](C_pooled_dedup.md) |

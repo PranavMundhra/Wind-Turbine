@@ -16,7 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def repo(tmp_path):
     dst = tmp_path / "repo"
     shutil.copytree(ROOT, dst, ignore=shutil.ignore_patterns(".git", "__pycache__", "*.egg-info",
-                                                              ".pytest_cache", "*.png", "*.pdf"))
+                                                              ".pytest_cache", ".venv", "dist",
+                                                              "*.png", "*.pdf"))
     # keep link targets that were skipped by the ignore pattern
     for p in ROOT.rglob("*.png"):
         q = dst / p.relative_to(ROOT)
@@ -38,13 +39,13 @@ def test_unregistered_notebook_is_caught(repo):
 
 def test_broken_link_is_caught(repo):
     p = repo / "docs" / "experiments" / "C_pooled_dedup.md"
-    p.write_text(p.read_text() + "\nSee [missing](nowhere.md).\n")
+    p.write_text(p.read_text(encoding="utf-8") + "\nSee [missing](nowhere.md).\n", encoding="utf-8")
     assert any("broken link" in e for e in check(repo))
 
 
 def test_notebook_without_header_cell_is_caught(repo):
     nb = repo / "notebooks" / "10_arm_isolated.ipynb"
-    d = json.loads(nb.read_text())
+    d = json.loads(nb.read_text(encoding="utf-8"))
     d["cells"] = d["cells"][1:]
     nb.write_text(json.dumps(d))
     assert any("must name 'Experiment A'" in e for e in check(repo))
@@ -52,7 +53,7 @@ def test_notebook_without_header_cell_is_caught(repo):
 
 def test_cycle_and_unknown_dependency_are_caught(repo):
     reg = repo / "experiments" / "registry.yaml"
-    data = yaml.safe_load(reg.read_text())
+    data = yaml.safe_load(reg.read_text(encoding="utf-8"))
     for e in data["experiments"]:
         if e["id"] == "B":  # F4 -> F2 -> F1 -> C -> B, so B -> F4 closes a cycle
             e["depends_on"] = ["F4"]

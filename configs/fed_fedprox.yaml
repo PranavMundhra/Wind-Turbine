@@ -1,4 +1,5 @@
-# F3: FedProx sweep. mu = 0 approaches Arm D; large mu approaches one global model (F1 / Arm C).
+# F3: FedProx stability sweep. mu = 0 is FedAvg with matching solver settings.
+# No guaranteed local-only / centralised endpoints; D and C are references.
 arm: fedprox
 extra:
   framework: flwr

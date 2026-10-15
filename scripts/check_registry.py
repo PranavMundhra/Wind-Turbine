@@ -46,7 +46,7 @@ def check(root: Path = ROOT) -> list[str]:
                 errs.append(f"{eid}: {f} {p} does not exist")
         nb = e.get("notebook")
         if nb and (root / nb).exists():
-            cells = json.loads((root / nb).read_text())["cells"]
+            cells = json.loads((root / nb).read_text(encoding="utf-8"))["cells"]
             first = "".join(cells[0]["source"]) if cells else ""
             if f"Experiment {eid}" not in first:
                 errs.append(f"{eid}: first cell of {nb} must name 'Experiment {eid}' and link its doc")
@@ -73,7 +73,7 @@ def check(root: Path = ROOT) -> list[str]:
     for md in md_files:
         if not md.exists():
             continue
-        text = re.sub(r"```.*?```", "", md.read_text(), flags=re.DOTALL)  # ignore code blocks
+        text = re.sub(r"```.*?```", "", md.read_text(encoding="utf-8"), flags=re.DOTALL)
         for target in LINK.findall(text):
             if target.startswith(("http://", "https://", "#", "mailto:")):
                 continue

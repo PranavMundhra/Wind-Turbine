@@ -15,10 +15,10 @@
 <!-- generated:end -->
 
 ## Question
-What does performance look like along the whole dial from local-only to fully shared training?
+How does the strength of the proximal penalty affect federated optimization and CARE?
 
 ## Why it matters
-FedProx adds a penalty (mu/2)·‖θ − θ_global‖² to each client's loss. At large mu every client is pinned to the global model (F1, close to C); at mu = 0 with enough local epochs clients barely interact (close to D). The companion PDF says the shape of that curve is the paper. Correction to the PDF: its endpoints are A and B, but with turbine clients and leak-free data they are D and C.
+FedProx adds a penalty (mu/2)·‖θ − θ_global‖² to each client's loss. With matching local solver and aggregation settings, mu = 0 is FedAvg, not independent local training. Larger mu constrains local updates; it does not guarantee the centralized result or a monotone curve between C and D. Treat C, regenerated D, and the matched centralized comparator as reference methods, not guaranteed endpoints. See the [original FedProx paper](https://proceedings.mlsys.org/paper_files/paper/2020/file/1f5fe83998a09396ebe6477d9475ba0c-Paper.pdf).
 
 ## Method: change from F1
 Replace FedAvg with FedProx; sweep mu over the grid in `configs/fed_fedprox.yaml` (starting grid 0 to 10, refined around wherever CARE changes fastest). Plot CARE against mu with C and D as horizontal reference lines, and F2 as a third line.
@@ -32,9 +32,9 @@ Replace FedAvg with FedProx; sweep mu over the grid in `configs/fed_fedprox.yaml
 ## Decision rule
 | Curve shape | Reading |
 | --- | --- |
-| Interior maximum above both ends | Partial sharing wins; report the best mu and compare it with F2. |
-| Monotone towards D | Collaboration only hurts; the local model is the answer for this farm. |
-| Flat | mu does not matter at this scale; F2's architecture split is the only lever. |
+| A nonzero mu improves on matched FedAvg | The proximal constraint helps under the tested solver and data settings. |
+| No mu improves on FedAvg or regenerated D | No benefit was measured for this penalty and search grid; do not infer that all collaboration fails. |
+| Flat | No sensitivity was measured in this grid and budget. |
 
 ## Results
 Not run.

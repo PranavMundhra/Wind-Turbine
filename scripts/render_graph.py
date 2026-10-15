@@ -120,12 +120,12 @@ def main(argv=None) -> int:
     targets = [(GRAPH_MD, mermaid(exps)), (INDEX_MD, index_table(exps))]
     targets += [(ROOT / e["doc"], doc_header(e, exps)) for e in exps]
     for path, block in targets:
-        old = path.read_text()
+        old = path.read_text(encoding="utf-8")
         new = splice(old, block)
         if new != old:
             stale.append(path.relative_to(ROOT).as_posix())
             if not args.check:
-                path.write_text(new)
+                path.write_text(new, encoding="utf-8")
     if args.check and stale:
         print("stale generated blocks:", stale, "- run `make graph`")
         return 1

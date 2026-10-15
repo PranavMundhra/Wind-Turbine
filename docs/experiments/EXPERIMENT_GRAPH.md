@@ -15,7 +15,7 @@ flowchart LR
     B["B: Pooled, one fleet-wide model<br/>done-unverified · unblocks 6"]
   end
   subgraph lane_0["Phase 0: clean baselines, client data, noise"]
-    E03["E03: Leak-free per-turbine client dataset<br/>partial · unblocks 5"]
+    E03["E03: Leak-free per-turbine client dataset<br/>done · unblocks 5"]
     C["C: Pooled, leaked rows removed<br/>done · unblocks 4"]
     D["D: Local per-turbine, no collaboration<br/>done · unblocks 3"]
     S["S: Seed robustness and confidence intervals<br/>planned · unblocks 0"]
