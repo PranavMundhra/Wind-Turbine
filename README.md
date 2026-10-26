@@ -36,6 +36,11 @@ This is one run of the new pipeline; the earlier table remains historical.
 SGD-equivalence, cohort/metric-parity checks and a matched centralized comparator
 required before interpreting results. See the [transition assessment](docs/FEDERATED_TRANSITION_2026_10_15.md).
 
+F1 is now implemented in [30_fedavg.ipynb](notebooks/30_fedavg.ipynb), with shared
+Flower aggregation and a matched centralized comparator. Both use the exact E03
+exports and validation-only checkpoint selection. See the [F1 Kaggle guide](docs/FEDAVG.md).
+Real-data F1 results are still pending.
+
 **Key finding:** the published data duplicates rows across event files. 25.4% of the pooled
 arm's evaluation rows were also in its training set. The evidence is in
 [`results/leakage_audit/`](results/leakage_audit/). **Next step:** federated learning with
@@ -53,10 +58,10 @@ against it. What was wrong with the original layout and how it is fixed:
 ## Layout
 
 ```
-src/windturbine/   reusable code (client data, config, scoring, audit, runs, paths; models/federated still partial)
+src/windturbine/   reusable client data, config, scoring, audit, runs, models and FedAvg
 experiments/       registry.yaml: every experiment, its files and its dependencies
 configs/           YAML run configs (base + per arm)
-notebooks/         00 cache, 01 EDA, 02 leakage audit, 10 isolated, 11 pooled, 20 federated clients
+notebooks/         data/audit, A-D baselines, 20 federated clients, 30 FedAvg
 results/           leakage_audit/ evidence; runs/ for new outputs (git-ignored)
 docs/              model documentation, roadmap, architecture, ADRs, companion PDF
 scripts/           registry check, graph renderer, run comparison, synthetic data
@@ -68,6 +73,7 @@ tests/             pytest suite
 ```bash
 pip install -e ".[dev]"      # tests, lint
 pip install -e ".[train]"    # adds TensorFlow etc. for the notebooks
+pip install -e ".[federated]" # pinned TensorFlow/Flower pair for F1
 make check test
 ```
 
@@ -87,6 +93,9 @@ The extracted functions were checked against the notebook originals on random in
 The E03 data bridge and D integration are implemented and tested locally. The supplied
 Kaggle execution records verified loading of all 22 clients and completed the new D
 baseline at seed 42. Full-precision run artifacts still need archiving; multiple-seed
-matched comparisons and federated training remain outstanding.
-Not done: extraction of the older A/B/C data/model code, `runners`, `federated`, a pinned environment (the TensorFlow
-version used was never recorded), and a LICENSE (the owner must choose one).
+matched comparisons and real-data federated training remain outstanding. F1 now
+has a Kaggle notebook, real Flower aggregation, checkpoint artifacts and synthetic
+integration tests. Its TensorFlow/Flower dependencies are pinned; run manifests
+record the resolved environment.
+Not done: extraction of the older A/B/C data/model code, `runners`, personalized
+federation, a full historical environment lock, and a LICENSE (the owner must choose one).

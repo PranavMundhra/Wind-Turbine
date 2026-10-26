@@ -1,6 +1,5 @@
-"""Autoencoder (243 -> 133 -> 83 -> 20 -> 83 -> 133 -> 243) and training loop.
+"""Lazy TensorFlow normal-behaviour autoencoder and explicit training helpers."""
 
-TODO (roadmap phase R): move ``build_autoencoder`` and ``fit_autoencoder`` from the
-arm notebooks. Keep TensorFlow imports inside this subpackage so ``scoring`` and
-``audit`` stay importable (and testable in CI) without it.
-"""
+from .autoencoder import build_autoencoder, mean_squared_error, parameter_contract, train_epochs
+
+__all__ = ["build_autoencoder", "mean_squared_error", "parameter_contract", "train_epochs"]

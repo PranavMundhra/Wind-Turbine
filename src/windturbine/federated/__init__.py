@@ -1,8 +1,27 @@
-"""Federated learning (roadmap phases 1-5). Not implemented.
+"""In-process Flower federated training: F1 FedAvg and the F2-F4 strategies."""
 
-Design decisions already made (see docs/adr/0001):
-  * client = ``asset_id`` (22 clients), never an event file;
-  * scaler and threshold stay local; encoder shared, decoder fine-tuned locally
-    (phase 3); FedProx mu sweep (phase 4); secure aggregation then DP (phase 5);
-  * ``notebooks/20_federated_clients.ipynb`` builds the per-client dataset today.
-"""
+from .fedavg import ClientUpdate, aggregate_updates, load_checkpoint, run_fedavg, run_preflight
+from .smoke import build_synthetic_clients
+from .strategies import (
+    privacy_report,
+    run_federated,
+    run_strategy_preflight,
+    secure_aggregate,
+    strategy_options,
+    summarize_runs,
+)
+
+__all__ = [
+    "ClientUpdate",
+    "aggregate_updates",
+    "build_synthetic_clients",
+    "load_checkpoint",
+    "privacy_report",
+    "run_fedavg",
+    "run_federated",
+    "run_preflight",
+    "run_strategy_preflight",
+    "secure_aggregate",
+    "strategy_options",
+    "summarize_runs",
+]

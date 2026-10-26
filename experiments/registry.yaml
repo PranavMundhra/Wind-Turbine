@@ -128,13 +128,13 @@ experiments:
     title: FedAvg, global model, local thresholds
     kind: federated
     phase: "2"
-    status: planned
+    status: partial
     importance: gate
-    question: Does naive federated averaging reproduce the centralised result, as predicted?
-    notebook: null
+    question: How does full-participation FedAvg compare with centralized training on the exact same client data?
+    notebook: notebooks/30_fedavg.ipynb
     config: configs/fed_fedavg.yaml
     doc: docs/experiments/F1_fedavg.md
-    depends_on: [E03, C]
+    depends_on: [E03, C, D]
     compares_with: [C, D]
     produces: [results, per_event, row_scores, round_log]
 
@@ -142,10 +142,10 @@ experiments:
     title: Personalised FL, shared encoder, local decoder
     kind: federated
     phase: "3"
-    status: planned
+    status: partial
     importance: headline
     question: Can sharing the encoder and personalising the decoder beat both centralised and local-only training?
-    notebook: null
+    notebook: notebooks/31_fed_personalised.ipynb
     config: configs/fed_personalised.yaml
     doc: docs/experiments/F2_personalised_fl.md
     depends_on: [F1, D]
@@ -156,10 +156,10 @@ experiments:
     title: FedProx mu sweep
     kind: federated
     phase: "4"
-    status: planned
+    status: partial
     importance: headline
     question: What does the curve between local-only and fully shared training look like?
-    notebook: null
+    notebook: notebooks/32_fedprox.ipynb
     config: configs/fed_fedprox.yaml
     doc: docs/experiments/F3_fedprox_sweep.md
     depends_on: [F1, D]
@@ -170,10 +170,10 @@ experiments:
     title: Secure aggregation and differential privacy
     kind: federated
     phase: "5"
-    status: planned
+    status: partial
     importance: supporting
     question: What does formal privacy cost in CARE?
-    notebook: null
+    notebook: notebooks/33_fed_private.ipynb
     config: configs/fed_private.yaml
     doc: docs/experiments/F4_private_fl.md
     depends_on: [F2, F3]

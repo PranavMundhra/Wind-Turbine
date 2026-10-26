@@ -6,11 +6,11 @@ Experiments are defined in [`experiments/`](experiments/README.md) and drawn in 
 |---|---|---|---|
 | R | [E00](experiments/E00_data_cache.md), [E01](experiments/E01_eda.md), [E02](experiments/E02_leakage_audit.md); extract `data` and `models` into the package | A and B re-run from configs with run manifests, matching 0.628 / 0.583 within noise | Package partly extracted; E00-E02 done |
 | 0 | [E03](experiments/E03_client_dataset.md), [C](experiments/C_pooled_dedup.md), [D](experiments/D_local_per_turbine.md), [S](experiments/S_seed_robustness.md) | 22 verified clients on one feature schema; matched baseline runs and uncertainty estimates | E03 verified during the completed Kaggle D run: 22 clients / 58 events, seed-42 CARE 0.639852. Full-precision artifact archive and matched multi-seed baseline/uncertainty study remain open. |
-| 1 | Federated plumbing: Flower simulation, shared per-event CARE reporting | Full-participation, one full-batch SGD step matches centralized GD; server metrics match direct evaluation | Ready to start; the real-data bridge and D execution are demonstrated. FL implementation is not yet present. |
-| 2 | [F1](experiments/F1_fedavg.md) | Restricted SGD and metric parity pass; compare FL with a matched centralized replay of the same client partitions | Not started |
-| 3 | [F2](experiments/F2_personalised_fl.md) | F2 above both C and D | Not started |
-| 4 | [F3](experiments/F3_fedprox_sweep.md) | Measure CARE and optimization sensitivity to mu; zero mu matches FedAvg under the same settings, with no guaranteed D/C endpoints | Not started |
-| 5 | [F4](experiments/F4_private_fl.md) | CARE cost per privacy budget | Not started |
+| 1 | Federated plumbing: Flower simulation, shared per-event CARE reporting | Full-participation, one full-batch SGD step matches centralized GD; server metrics match direct evaluation | Implemented with real Flower aggregation and synthetic TensorFlow integration checks. See [F1 guide](FEDAVG.md). |
+| 2 | [F1](experiments/F1_fedavg.md) | Restricted SGD and metric parity pass; compare FL with a matched centralized replay of the same client partitions | Synthetic notebook integration passed; real-data Kaggle pilot and archived comparison pending. |
+| 3 | [F2](experiments/F2_personalised_fl.md) | F2 above both C and D | Implemented as FedPer ([notebook](../notebooks/31_fed_personalised.ipynb)); synthetic smoke passed, real-data run pending. |
+| 4 | [F3](experiments/F3_fedprox_sweep.md) | Measure CARE and optimization sensitivity to mu; zero mu matches FedAvg under the same settings, with no guaranteed D/C endpoints | Implemented, one mu per Kaggle session ([notebook](../notebooks/32_fedprox.ipynb)); mu = 0 equals FedAvg bit for bit in tests. Real-data sweep pending. |
+| 5 | [F4](experiments/F4_private_fl.md) | CARE cost per privacy budget | Implemented: simulated secure aggregation plus record-level DP-SGD ([notebook](../notebooks/33_fed_private.ipynb)). Real-data sweep pending. |
 | any | [X](experiments/X_ablations.md) | No ablation changes an arm ranking | X2 (earliness weighting) most urgent |
 
 ## Open questions

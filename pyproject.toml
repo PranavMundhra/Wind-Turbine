@@ -13,6 +13,8 @@ dependencies = ["numpy", "pandas", "pyyaml"]
 [project.optional-dependencies]
 # TensorFlow is only needed to train; scoring/audit/config tests run without it.
 train = ["tensorflow", "scikit-learn", "scipy", "pyarrow"]
+# Pin the tested F1 pair: older Flower releases conflict with TF 2.21's protobuf.
+federated = ["tensorflow==2.21.0", "flwr==1.40.0", "pyarrow", "dp-accounting"]
 eda = ["matplotlib", "seaborn", "statsmodels", "scikit-learn", "scipy"]
 dev = ["pytest", "ruff", "nbstripout", "pre-commit"]
 

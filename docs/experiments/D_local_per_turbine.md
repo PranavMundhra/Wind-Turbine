@@ -8,7 +8,7 @@
 | Importance | gate |
 | Depends on | [E03](E03_client_dataset.md) |
 | Judged against | [A](A_isolated_per_event.md), [C](C_pooled_dedup.md) |
-| Unblocks | [F2](F2_personalised_fl.md), [F3](F3_fedprox_sweep.md), [F4](F4_private_fl.md) |
+| Unblocks | [F1](F1_fedavg.md), [F2](F2_personalised_fl.md), [F3](F3_fedprox_sweep.md), [F4](F4_private_fl.md) |
 | Notebook | [`notebooks/13_arm_local_turbine.ipynb`](../../notebooks/13_arm_local_turbine.ipynb) |
 | Config | [`configs/arm_local_turbine.yaml`](../../configs/arm_local_turbine.yaml) |
 | Runs | `results/runs/D/` |

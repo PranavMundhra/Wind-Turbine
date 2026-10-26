@@ -17,14 +17,14 @@ flowchart LR
   subgraph lane_0["Phase 0: clean baselines, client data, noise"]
     E03["E03: Leak-free per-turbine client dataset<br/>done · unblocks 5"]
     C["C: Pooled, leaked rows removed<br/>done · unblocks 4"]
-    D["D: Local per-turbine, no collaboration<br/>done · unblocks 3"]
+    D["D: Local per-turbine, no collaboration<br/>done · unblocks 4"]
     S["S: Seed robustness and confidence intervals<br/>planned · unblocks 0"]
   end
   subgraph lane_fl["Phases 2-5: federated arms"]
-    F1["F1: FedAvg, global model, local thresholds<br/>planned · unblocks 3"]
-    F2["F2: Personalised FL, shared encoder, local decoder<br/>planned · unblocks 1"]
-    F3["F3: FedProx mu sweep<br/>planned · unblocks 1"]
-    F4["F4: Secure aggregation and differential privacy<br/>planned · unblocks 0"]
+    F1["F1: FedAvg, global model, local thresholds<br/>partial · unblocks 3"]
+    F2["F2: Personalised FL, shared encoder, local decoder<br/>partial · unblocks 1"]
+    F3["F3: FedProx mu sweep<br/>partial · unblocks 1"]
+    F4["F4: Secure aggregation and differential privacy<br/>partial · unblocks 0"]
   end
   subgraph lane_any["Any phase"]
     X["X: Ablations<br/>planned · unblocks 0"]
@@ -40,6 +40,7 @@ flowchart LR
   E03 ==> D
   E03 ==> F1
   C ==> F1
+  D ==> F1
   F1 ==> F2
   D ==> F2
   F1 ==> F3
@@ -53,7 +54,6 @@ flowchart LR
   C -.-|vs| A
   D -.-|vs| A
   D -.-|vs| C
-  F1 -.-|vs| D
   F2 -.-|vs| C
   F2 -.-|vs| A
   F3 -.-|vs| C

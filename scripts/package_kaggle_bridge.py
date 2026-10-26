@@ -16,7 +16,10 @@ def package(root: Path, output: Path) -> Path:
     paths = [*root.glob("src/windturbine/**/*.py"), *root.glob("configs/*.yaml"),
              root / "pyproject.toml", root / "README.md",
              root / "notebooks/20_federated_clients.ipynb",
-             root / "notebooks/13_arm_local_turbine.ipynb", root / "docs/CLIENT_BRIDGE.md"]
+             root / "notebooks/13_arm_local_turbine.ipynb",
+             root / "notebooks/30_fedavg.ipynb", root / "notebooks/31_fed_personalised.ipynb",
+             root / "notebooks/32_fedprox.ipynb", root / "notebooks/33_fed_private.ipynb",
+             root / "docs/CLIENT_BRIDGE.md", root / "docs/FEDAVG.md"]
     required = root / "src/windturbine/data/clients.py"
     if required not in paths:
         raise FileNotFoundError("Client bridge source has not been created yet")

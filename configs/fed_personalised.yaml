@@ -1,12 +1,21 @@
-# F2: shared encoder (FedAvg), decoder fine-tuned locally each round.
+# F2: FedPer. The encoder is FedAvg-averaged; each turbine keeps its own decoder.
+# Every round each client trains all layers for local_epochs, then sends only the encoder.
 arm: fed_personalised
+use_lr_plateau: false              # fixed learning rate, as F1
 extra:
   framework: flwr
-  strategy: fedavg_partial
+  strategy: fedper
   shared_layers: [encode1, encode2, bottleneck]
   local_layers: [decode1, decode2, output]
-  local_finetune_epochs: TBD
   n_clients: 22
+  expected_clients: 22
+  expected_events: 58
+  fraction_fit: 1.0
   rounds: 100
-  scaler: local
-  threshold: local
+  local_epochs: 1                  # same per-round cost as F1's FedAvg branch
+  max_hours: 11                    # abort after the first rounds if the pace projects past Kaggle's 12 h limit
+  aggregation_weight: n_rows_after_leak_removal
+  scaler: local                    # ADR 0002
+  threshold: local                 # ADR 0002
+  expected_dataset_manifest_sha256: bb2ed3ffc84adbf79bbba624941090acd91831097f427b38b2e20885d4b0b1d1
+  dataset_override_reason: null

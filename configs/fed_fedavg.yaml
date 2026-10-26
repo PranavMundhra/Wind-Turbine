@@ -1,12 +1,18 @@
-# F1: FedAvg over 22 turbine clients. Values marked TBD are chosen in the run, not here.
+# F1: full-participation FedAvg on the exact exported turbine partitions.
 arm: fedavg
+use_lr_plateau: false              # fixed learning rate; no local early stopping
 extra:
-  framework: flwr                  # Flower, simulation mode
+  framework: flwr                  # Flower strategy, sequential in-process simulation
   strategy: fedavg
   n_clients: 22
+  expected_clients: 22
+  expected_events: 58
   fraction_fit: 1.0                # cross-silo: every client every round
   rounds: 100                      # companion PDF's communication estimate
-  local_epochs: TBD
+  local_epochs: 1
+  max_hours: 11                    # abort after the first rounds if the pace projects past Kaggle's 12 h limit
   aggregation_weight: n_rows_after_leak_removal
   scaler: local                    # ADR 0002
   threshold: local                 # ADR 0002
+  expected_dataset_manifest_sha256: bb2ed3ffc84adbf79bbba624941090acd91831097f427b38b2e20885d4b0b1d1
+  dataset_override_reason: null    # required if intentionally using another audited export

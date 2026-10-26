@@ -3,13 +3,13 @@
 <!-- generated:start -->
 | Registry field | Value |
 | --- | --- |
-| Status | planned |
+| Status | partial |
 | Phase | 4 |
 | Importance | headline |
 | Depends on | [F1](F1_fedavg.md), [D](D_local_per_turbine.md) |
 | Judged against | [C](C_pooled_dedup.md), [D](D_local_per_turbine.md), [F2](F2_personalised_fl.md) |
 | Unblocks | [F4](F4_private_fl.md) |
-| Notebook | none yet |
+| Notebook | [`notebooks/32_fedprox.ipynb`](../../notebooks/32_fedprox.ipynb) |
 | Config | [`configs/fed_fedprox.yaml`](../../configs/fed_fedprox.yaml) |
 | Runs | `results/runs/F3/` |
 <!-- generated:end -->
@@ -22,6 +22,12 @@ FedProx adds a penalty (mu/2)·‖θ − θ_global‖² to each client's loss. W
 
 ## Method: change from F1
 Replace FedAvg with FedProx; sweep mu over the grid in `configs/fed_fedprox.yaml` (starting grid 0 to 10, refined around wherever CARE changes fastest). Plot CARE against mu with C and D as horizontal reference lines, and F2 as a third line.
+
+**Implemented** (`run_federated`, `strategy: fedprox`). Each local step adds mu·(w − w_broadcast) to the data gradient, which is the gradient of the proximal term. Every client trains for **two local epochs**, so local drift is large enough for the penalty to matter. With one epoch FedProx barely differs from FedAvg. Flower averages all weights by retained training rows.
+
+With mu = 0 the run is FedAvg at two local epochs. A test checks this bit for bit, and another shows the same engine reproduces F1's FedAvg branch exactly. That mu = 0 run is the sweep's own baseline.
+
+Each mu costs about one full F1 run (100 rounds × 2 epochs), so **one Kaggle session runs one mu**, chosen with `WT_F3_MU`. The notebook's final section verifies every attached session output and writes `care_vs_mu.csv` with the curve.
 
 ## Inputs and outputs
 | Direction | Artifact | Path |
@@ -37,7 +43,7 @@ Replace FedAvg with FedProx; sweep mu over the grid in `configs/fed_fedprox.yaml
 | Flat | No sensitivity was measured in this grid and budget. |
 
 ## Results
-Not run.
+Implemented ([notebook](../../notebooks/32_fedprox.ipynb)); no real-data mu has run. Run mu = 0 first.
 
 ## Risks and open questions
 - Cost: 6 grid points × 3 seeds = 18 federated runs. Run the grid at one seed first.

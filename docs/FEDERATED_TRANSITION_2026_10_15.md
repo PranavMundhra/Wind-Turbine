@@ -41,6 +41,11 @@ The printed E03 manifest SHA256 is `bb2ed3ffc84adbf79bbba624941090acd91831097f42
 
 ## Work to do next
 
+Update: the F1 implementation now covers steps 1, 2, 3 and 5 below, with a
+Kaggle notebook and synthetic integration tests. The real-data pilot in step 4
+and research evidence remain pending. See [FEDAVG.md](FEDAVG.md) for the current
+execution rules and [F1](experiments/F1_fedavg.md) for experiment status.
+
 1. Implement the smallest full-participation FedAvg simulation. Use a common initialization, fixed named parameter order and weights equal to retained fitting-row counts.
 2. Verify one full-batch plain-SGD step against centralized gradient descent on the same transformed data, including unequal client sizes. Passing this restricted test does not certify multi-epoch Adam training.
 3. Verify exact evaluation event coverage and client/server CARE parity. The existing shared aggregator supports this, but the actual FL reporting path still needs to demonstrate it. Never average client CARE or weight evaluation by training rows.
