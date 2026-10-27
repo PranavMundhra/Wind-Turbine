@@ -27,6 +27,8 @@ references:
         given-names: Christian
       - family-names: Roelofs
         given-names: Cyriana M. A.
-    doi: 10.5281/zenodo.14006163
+    doi: 10.5281/zenodo.15846963
+    version: "6"
+    date-released: 2025-07-09
     publisher:
       name: Zenodo

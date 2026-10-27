@@ -97,8 +97,12 @@ Windows as well as Linux. `requirements-lock.txt` lists the exact versions of th
 
 ### 2. Get the data
 
-CARE to Compare is published on Zenodo under CC BY-SA 4.0 and is not redistributed here:
-[doi:10.5281/zenodo.14006163](https://doi.org/10.5281/zenodo.14006163). Download and unpack it.
+CARE to Compare is published on Zenodo under CC BY-SA 4.0 and is not redistributed here. All runs used
+**version 6** (9 July 2025): [doi:10.5281/zenodo.15846963](https://doi.org/10.5281/zenodo.15846963). Download and unpack it.
+
+Use v6 or later. Zenodo advises against v2 (`10.5281/zenodo.14006163`), whose timestamps do not match the
+event-info files. Wind Farm C's labels are the same across versions (27 anomaly and 31 normal events);
+benchmark-wide, v6 has 45 anomaly and 50 normal datasets, because v5 relabelled one Wind Farm A event.
 
 ### 3. Build the leak-free clients
 
@@ -208,6 +212,9 @@ also cite the dataset:
 > C. Gück, C. M. A. Roelofs and S. Faulstich, "CARE to Compare: A real-world benchmark dataset for early
 > fault detection in wind turbine data," *Data*, vol. 9, no. 12, art. no. 138, 2024,
 > doi: 10.3390/data9120138.
+>
+> C. Gück and C. M. A. Roelofs, "Wind turbine SCADA data for early fault detection," Zenodo, version 6,
+> Jul. 2025, doi: 10.5281/zenodo.15846963.
 
 The code is released under the [MIT licence](LICENSE). The CARE to Compare data keep their own
 CC BY-SA 4.0 licence.
