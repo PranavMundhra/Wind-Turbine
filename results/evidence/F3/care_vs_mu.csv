@@ -1,2 +1,0 @@
-run,experiment,branch,mu,noise_multiplier,epsilon,secure_aggregation,seed,rounds,local_epochs,selected_epoch,dataset_manifest_sha256,CARE,Coverage,Earliness,Reliability,Accuracy
-mu_10_20261026T210319_455397Z,F3,fedprox,10.0,0.0,inf,False,42,100,2,100,1a43906dd01a0ed2f5a8fee5f40cccda949e6fa85c24c80851c79ae3381165b4,0.5900753001751566,0.23957662701086874,0.14582731126812806,0.6043956043956044,0.9802884791005908

@@ -8,23 +8,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -e ".[dev]"
-      - run: ruff check src tests scripts
-      - run: python scripts/check_registry.py
-      - run: python scripts/render_graph.py --check
+      # CPU PyTorch keeps the job small; the training tests use tiny synthetic data.
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -e ".[train,dev]"
+      - run: ruff check src tests
       - run: pytest -q
-  federated:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - run: pip install -e ".[dev,federated]"
-      - run: pip check
-      - run: pytest -q tests/test_fedavg.py tests/test_fedavg_notebook.py
         env:
-          CUDA_VISIBLE_DEVICES: "-1"
-          TF_NUM_INTRAOP_THREADS: "1"
-          TF_NUM_INTEROP_THREADS: "1"
+          KERAS_BACKEND: torch
           FLWR_TELEMETRY_ENABLED: "0"
+      # Table I must still rebuild exactly from the committed run files.
+      - run: python -m windturbine summarise --runs results/paper --out results/paper --boot 200
+      - run: git diff --exit-code -- results/paper/table_I.md

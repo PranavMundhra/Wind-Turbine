@@ -1,0 +1,6 @@
+# Local training (D): one autoencoder per turbine on its own rows, no collaboration.
+# Learning-rate halving and early stopping as in Section IV (base.yaml values).
+inherits: [_dataset.yaml]
+arm: local_turbine
+extra:
+  runner: local

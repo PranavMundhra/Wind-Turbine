@@ -127,7 +127,7 @@ def _step(state, batch, noise, hp):
 def _new_state(shapes, n_anchors, device):
     import torch
 
-    zeros = lambda: [torch.zeros(s, device=device) for s in shapes]  # noqa: E731
+    zeros = lambda: [torch.zeros(s, device=device) for s in shapes]
     params = [torch.zeros(s, device=device, requires_grad=True) for s in shapes]
     return {"params": params, "m": zeros(), "v": zeros(), "t": torch.zeros((), device=device),
             "anchors": [torch.zeros(shapes[i], device=device) for i in range(n_anchors)],
@@ -270,14 +270,14 @@ def train_epochs(model, X, *, epochs, batch_size, seed, mu=0.0, anchor=None, dp_
             # GaussianNoise's role: training-time input jitter, one seeded draw per epoch.
             source = shuffled + noise_std * torch.randn(shuffled.shape, generator=generator, device=device)
         state["total"].zero_()
-        start, done = 0, 0
+        first, done = 0, 0
         if use_graph:
             stack = shuffled[:n_full * batch_size].view(n_full, batch_size, n_features)
             while done + _GRAPH_STEPS <= n_full:
                 run_graph_chunk(stack[done:done + _GRAPH_STEPS])
                 done += _GRAPH_STEPS
-            start = done * batch_size
-        for start in range(start, n_rows, batch_size):
+            first = done * batch_size
+        for start in range(first, n_rows, batch_size):
             batch = shuffled[start:start + batch_size]
             noise = ([torch.randn(s, generator=generator, device=device) for s in shapes] if private else None)
             if noise_std:

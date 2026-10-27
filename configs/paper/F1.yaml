@@ -1,0 +1,6 @@
+# FedAvg (F1): one global model, every client 1 local epoch per round, 100 rounds.
+inherits: [_federated.yaml]
+arm: fedavg
+extra:
+  runner: fedavg
+  strategy: fedavg

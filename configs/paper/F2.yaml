@@ -1,0 +1,8 @@
+# Personalised (F2, FedPer): encoder averaged across turbines, decoder kept local.
+inherits: [_federated.yaml]
+arm: fed_personalised
+extra:
+  runner: federated
+  strategy: fedper
+  shared_layers: [encode1, encode2, bottleneck]
+  local_layers: [decode1, decode2, output]

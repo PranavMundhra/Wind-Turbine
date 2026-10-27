@@ -1,0 +1,13 @@
+# Versions recorded in the manifests of the seed-42 runs (results/paper/*/s42/manifest.json).
+# Install the CUDA build of torch for your GPU from pytorch.org first; the runs used torch 2.11.0+cu128.
+torch==2.11.0
+keras==3.15.1
+flwr==1.40.0
+dp-accounting==0.6.0
+numpy==2.5.4
+pandas==3.0.6
+pyarrow==26.0.0
+scikit-learn==1.9.1
+scipy==1.18.1
+pyyaml
+matplotlib

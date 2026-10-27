@@ -1,0 +1,9 @@
+# The comparator as run for the seed-42 paper draft: each epoch makes a full pass over one
+# turbine at a time, in random turbine order. Kept only to reproduce that row; the model
+# drifts toward the last turbine of each epoch (selected epoch 2 in the seed-42 run).
+inherits: [_federated.yaml]
+arm: centralised
+extra:
+  runner: central
+  strategy: fedavg
+  central_order: client_sequential

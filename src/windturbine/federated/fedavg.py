@@ -365,18 +365,37 @@ def _score_selected(root, branch_dir, cfg, weights, schema, events):
     return {"results": server, "metric_parity": True, "n_events": len(events)}
 
 
-def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_centralized=True):
-    """Run full-participation FedAvg and optionally the matched central baseline.
+CENTRAL_ORDERS = ("pooled_shuffle", "client_sequential")
+
+
+def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_centralized=True,
+               run_federated_branch=True, experiment="F1"):
+    """Run full-participation FedAvg and/or the matched centralised comparator.
 
     Local Adam is newly constructed for every client and round; central Adam is
     persistent. Both visit every retained fitting row rounds*local_epochs times.
     Fixed budgets run to completion, then choose the lowest row-weighted normal
     validation MSE. Prediction windows never enter optimization or selection.
+
+    The two branches use independent seed streams and the same initial weights,
+    so running them in separate calls gives the same results as one joint call.
+
+    ``extra.central_order`` sets how the centralised branch sees the union:
+    ``pooled_shuffle`` (default) shuffles minibatches across all clients' rows;
+    ``client_sequential`` reproduces the seed-42 paper runs, a full pass over one
+    client at a time in random client order. That order lets the model drift
+    toward the last client of each epoch: in the seed-42 run the selected epoch
+    was 2 and validation MSE rose from 0.50 to 0.91 by epoch 100.
     """
     import keras
 
-    if not isinstance(run_centralized, bool):
-        raise TypeError("run_centralized must be a boolean")
+    if not isinstance(run_centralized, bool) or not isinstance(run_federated_branch, bool):
+        raise TypeError("run_centralized and run_federated_branch must be booleans")
+    if not (run_centralized or run_federated_branch):
+        raise ValueError("Select at least one branch")
+    central_order = cfg.extra.get("central_order", "pooled_shuffle")
+    if central_order not in CENTRAL_ORDERS:
+        raise ValueError(f"central_order must be one of {CENTRAL_ORDERS}")
     rounds = _positive_int(cfg.extra.get("rounds", 100), "rounds")
     local_epochs = _positive_int(cfg.extra.get("local_epochs", 1), "local_epochs")
     _positive_int(cfg.batch_size, "batch_size")
@@ -414,67 +433,76 @@ def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_cent
         _write_json(publish / "model_contract.json", contract)
         global_weights = [w.copy() for w in initial]
         del model
-        branch_dir = publish / "fedavg"
-        branch_dir.mkdir()
-        history, round_rows = [], []
+        # Both branches start from, and are judged against, the same initial validation MSE,
+        # so either branch can run on its own (one session per branch).
+        keras.backend.clear_session()
         model = build_autoencoder(len(dataset["schema"]), cfg)
         model.set_weights(initial)
-        initial_validation_mse = _validation(model, cache, val_counts, 0, history)
-        best_value, best_round = initial_validation_mse, 0
-        save_checkpoint(branch_dir / "selected_weights.npz", initial)
-        round_rows.append({"epoch": 0, "validation_mse": initial_validation_mse,
-                           "participating_clients": 0, "fitting_rows": sum(counts.values()), "row_exposures": 0,
-                           "parameters_sha256": _parameter_hash(initial)})
+        initial_validation_mse = _validation(model, cache, val_counts, 0, [])
         del model
-        fl_started, round_seconds = time.perf_counter(), []
-        for server_round in range(1, rounds + 1):
-            updates = []
-            broadcast_hash = _parameter_hash(global_weights)
-            for aid, count in counts.items():
-                keras.backend.clear_session()
-                seed = _seed(cfg.seed, server_round, aid)
-                model = build_autoencoder(len(dataset["schema"]), cfg, seed=seed)
-                model.set_weights(global_weights)
-                if parameter_contract(model, dataset["schema"]) != contract:
-                    raise ValueError("Local model variable contract differs from the shared model")
-                if _parameter_hash(model.get_weights()) != broadcast_hash or int(model.optimizer.iterations.numpy()):
-                    raise AssertionError("Client did not start from identical broadcast with fresh optimizer")
-                loss = train_epochs(model, _matrix(cache, aid, "train"), epochs=local_epochs,
-                                    batch_size=cfg.batch_size, seed=seed)
-                local_val = mean_squared_error(model, _matrix(cache, aid, "val"))
-                updates.append(ClientUpdate(aid, count, model.get_weights(), dataset["schema_hash"]))
-                history.append({"epoch": server_round, "asset_id": aid, "phase": "local_fit",
-                                "loss": loss, "local_val_loss": local_val, "num_examples": count,
-                                "optimizer_steps": int(model.optimizer.iterations.numpy()),
-                                "seed": seed, "broadcast_sha256": broadcast_hash})
-                del model
-            global_weights = aggregate_updates(updates, expected_counts=counts, schema_hash=dataset["schema_hash"],
-                                               reference=initial, server_round=server_round)
-            keras.backend.clear_session()
+        branches = {}
+        if run_federated_branch:
+            branch_dir = publish / "fedavg"
+            branch_dir.mkdir()
+            history, round_rows = [], []
             model = build_autoencoder(len(dataset["schema"]), cfg)
-            model.set_weights(global_weights)
-            value = _validation(model, cache, val_counts, server_round, history)
-            round_rows.append({"epoch": server_round, "validation_mse": value,
-                               "participating_clients": len(counts), "fitting_rows": sum(counts.values()),
-                               "row_exposures": sum(counts.values()) * local_epochs,
-                               "parameters_sha256": _parameter_hash(global_weights)})
-            if value < best_value:
-                best_value, best_round = value, server_round
-                save_checkpoint(branch_dir / "selected_weights.npz", global_weights)
-            round_seconds.append(time.perf_counter() - fl_started - sum(round_seconds))
-            print(f"FedAvg round {server_round}/{rounds}: validation MSE {value:.6g} "
-                  f"({round_seconds[-1]:.1f}s)")
-            if server_round <= 3:
-                _check_time_budget(cfg, rounds, round_seconds, run_centralized)
-            del model, updates
-        save_checkpoint(branch_dir / "final_weights.npz", global_weights)
-        pd.DataFrame(history).to_csv(branch_dir / "history.csv", index=False)
-        pd.DataFrame(round_rows).to_csv(branch_dir / "rounds.csv", index=False)
-        branches = {"fedavg": {"selected_epoch": best_round, "selected_validation_mse": best_value,
-                               "epochs_run": rounds, "checkpoint": "fedavg/selected_weights.npz",
-                               "history": "fedavg/history.csv", "rounds": "fedavg/rounds.csv",
-                               "initial_validation_mse": initial_validation_mse,
-                               "optimizer_steps": sum(row.get("optimizer_steps", 0) for row in history)}}
+            model.set_weights(initial)
+            initial_validation_mse = _validation(model, cache, val_counts, 0, history)
+            best_value, best_round = initial_validation_mse, 0
+            save_checkpoint(branch_dir / "selected_weights.npz", initial)
+            round_rows.append({"epoch": 0, "validation_mse": initial_validation_mse,
+                               "participating_clients": 0, "fitting_rows": sum(counts.values()), "row_exposures": 0,
+                               "parameters_sha256": _parameter_hash(initial)})
+            del model
+            fl_started, round_seconds = time.perf_counter(), []
+            for server_round in range(1, rounds + 1):
+                updates = []
+                broadcast_hash = _parameter_hash(global_weights)
+                for aid, count in counts.items():
+                    keras.backend.clear_session()
+                    seed = _seed(cfg.seed, server_round, aid)
+                    model = build_autoencoder(len(dataset["schema"]), cfg, seed=seed)
+                    model.set_weights(global_weights)
+                    if parameter_contract(model, dataset["schema"]) != contract:
+                        raise ValueError("Local model variable contract differs from the shared model")
+                    if _parameter_hash(model.get_weights()) != broadcast_hash or int(model.optimizer.iterations.numpy()):
+                        raise AssertionError("Client did not start from identical broadcast with fresh optimizer")
+                    loss = train_epochs(model, _matrix(cache, aid, "train"), epochs=local_epochs,
+                                        batch_size=cfg.batch_size, seed=seed)
+                    local_val = mean_squared_error(model, _matrix(cache, aid, "val"))
+                    updates.append(ClientUpdate(aid, count, model.get_weights(), dataset["schema_hash"]))
+                    history.append({"epoch": server_round, "asset_id": aid, "phase": "local_fit",
+                                    "loss": loss, "local_val_loss": local_val, "num_examples": count,
+                                    "optimizer_steps": int(model.optimizer.iterations.numpy()),
+                                    "seed": seed, "broadcast_sha256": broadcast_hash})
+                    del model
+                global_weights = aggregate_updates(updates, expected_counts=counts, schema_hash=dataset["schema_hash"],
+                                                   reference=initial, server_round=server_round)
+                keras.backend.clear_session()
+                model = build_autoencoder(len(dataset["schema"]), cfg)
+                model.set_weights(global_weights)
+                value = _validation(model, cache, val_counts, server_round, history)
+                round_rows.append({"epoch": server_round, "validation_mse": value,
+                                   "participating_clients": len(counts), "fitting_rows": sum(counts.values()),
+                                   "row_exposures": sum(counts.values()) * local_epochs,
+                                   "parameters_sha256": _parameter_hash(global_weights)})
+                if value < best_value:
+                    best_value, best_round = value, server_round
+                    save_checkpoint(branch_dir / "selected_weights.npz", global_weights)
+                round_seconds.append(time.perf_counter() - fl_started - sum(round_seconds))
+                print(f"FedAvg round {server_round}/{rounds}: validation MSE {value:.6g} "
+                      f"({round_seconds[-1]:.1f}s)")
+                if server_round <= 3:
+                    _check_time_budget(cfg, rounds, round_seconds, run_centralized)
+                del model, updates
+            save_checkpoint(branch_dir / "final_weights.npz", global_weights)
+            pd.DataFrame(history).to_csv(branch_dir / "history.csv", index=False)
+            pd.DataFrame(round_rows).to_csv(branch_dir / "rounds.csv", index=False)
+            branches["fedavg"] = {"selected_epoch": best_round, "selected_validation_mse": best_value,
+                                   "epochs_run": rounds, "checkpoint": "fedavg/selected_weights.npz",
+                                   "history": "fedavg/history.csv", "rounds": "fedavg/rounds.csv",
+                                   "initial_validation_mse": initial_validation_mse,
+                                   "optimizer_steps": sum(row.get("optimizer_steps", 0) for row in history)}
         if run_centralized:
             central_dir = publish / "centralized"
             central_dir.mkdir()
@@ -486,15 +514,29 @@ def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_cent
             best_value, best_epoch = initial_validation_mse, 0
             save_checkpoint(central_dir / "selected_weights.npz", initial)
             budget = rounds * local_epochs
+            pooled = None
+            if central_order == "pooled_shuffle":
+                # The union of every client's locally scaled fitting rows; train_epochs
+                # reshuffles it every epoch, so each minibatch mixes turbines.
+                pooled = np.concatenate([np.asarray(_matrix(cache, aid, "train"), dtype=np.float32)
+                                         for aid in counts])
+            central_started, epoch_seconds = time.perf_counter(), []
             for epoch in range(1, budget + 1):
-                rng = np.random.default_rng(_seed(cfg.seed, epoch, 0, 1))
-                for index in rng.permutation(len(counts)):
-                    aid = list(counts)[index]
-                    loss = train_epochs(model, _matrix(cache, aid, "train"), epochs=1,
-                                        batch_size=cfg.batch_size, seed=_seed(cfg.seed, epoch, aid, 1))
-                    history.append({"epoch": epoch, "asset_id": aid, "phase": "central_fit",
-                                    "loss": loss, "num_examples": counts[aid],
+                if pooled is not None:
+                    loss = train_epochs(model, pooled, epochs=1, batch_size=cfg.batch_size,
+                                        seed=_seed(cfg.seed, epoch, 0, 1))
+                    history.append({"epoch": epoch, "asset_id": "all", "phase": "central_fit",
+                                    "loss": loss, "num_examples": len(pooled),
                                     "optimizer_steps": int(model.optimizer.iterations.numpy())})
+                else:
+                    rng = np.random.default_rng(_seed(cfg.seed, epoch, 0, 1))
+                    for index in rng.permutation(len(counts)):
+                        aid = list(counts)[index]
+                        loss = train_epochs(model, _matrix(cache, aid, "train"), epochs=1,
+                                            batch_size=cfg.batch_size, seed=_seed(cfg.seed, epoch, aid, 1))
+                        history.append({"epoch": epoch, "asset_id": aid, "phase": "central_fit",
+                                        "loss": loss, "num_examples": counts[aid],
+                                        "optimizer_steps": int(model.optimizer.iterations.numpy())})
                 # Match the FedAvg selection opportunities when local_epochs>1.
                 if epoch % local_epochs:
                     continue
@@ -505,6 +547,9 @@ def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_cent
                     best_value, best_epoch = value, epoch
                     save_checkpoint(central_dir / "selected_weights.npz", model.get_weights())
                 print(f"Centralized epoch {epoch}/{budget}: validation MSE {value:.6g}")
+                epoch_seconds.append(time.perf_counter() - central_started - sum(epoch_seconds))
+                if not run_federated_branch and len(epoch_seconds) <= 3:
+                    _check_time_budget(cfg, budget, epoch_seconds, False)
             save_checkpoint(central_dir / "final_weights.npz", model.get_weights())
             pd.DataFrame(history).to_csv(central_dir / "history.csv", index=False)
             pd.DataFrame(epoch_rows).to_csv(central_dir / "epochs.csv", index=False)
@@ -513,7 +558,7 @@ def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_cent
                                        "history": "centralized/history.csv", "rounds": "centralized/epochs.csv",
                                        "initial_validation_mse": initial_validation_mse,
                                        "optimizer_steps": int(model.optimizer.iterations.numpy())}
-            del model
+            del model, pooled
         # Both training branches finish and freeze their validation-selected
         # checkpoint before any prediction score is computed.
         for name, branch in branches.items():
@@ -529,9 +574,11 @@ def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_cent
             branch.update(_score_selected(root, publish / name, cfg, weights, dataset["schema"], events))
         _verify_frozen_inputs(root, frozen)
         from shutil import copyfile
-        copyfile(publish / "fedavg/results.json", publish / "results.json")
-        copyfile(publish / "fedavg/per_event.csv", publish / "per_event.csv")
-        manifest = {"experiment": "F1", "run_id": output.name, "config_hash": config_hash(cfg),
+        primary = "fedavg" if "fedavg" in branches else "centralized"
+        copyfile(publish / primary / "results.json", publish / "results.json")
+        copyfile(publish / primary / "per_event.csv", publish / "per_event.csv")
+        manifest = {"experiment": experiment, "primary_branch": primary, "central_order": central_order,
+                    "run_id": output.name, "config_hash": config_hash(cfg),
                     "created_utc": datetime.now(timezone.utc).isoformat(),
                     "algorithm": "Flower server.strategy.FedAvg.aggregate_fit",
                     "config": config_dict(cfg), "source_identity": source_identity,
@@ -545,7 +592,9 @@ def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_cent
                     "schema_hash": dataset["schema_hash"], "preflight": preflight, "branches": branches,
                     "initial_weights_sha256": file_hash(publish / "initial_weights.npz"),
                     "local_optimizer_policy": "fresh Adam for every client and round; fixed learning rate",
-                    "central_optimizer_policy": "persistent Adam; randomized client order; per-client shuffled minibatches",
+                    "central_optimizer_policy": ("persistent Adam; minibatches shuffled across the union of all clients"
+                                                 if central_order == "pooled_shuffle" else
+                                                 "persistent Adam; randomized client order; per-client shuffled minibatches"),
                     "seed_policy": "NumPy SeedSequence([base_seed,round_or_epoch,asset_id,branch]); branch 0 FL, 1 central",
                     "selection_policy": "initial checkpoint plus lowest retained-validation-row-weighted MSE; earliest tie; "
                                         "central selection every local_epochs passes; no prediction selection",

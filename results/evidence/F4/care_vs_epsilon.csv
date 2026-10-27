@@ -1,2 +1,0 @@
-run,experiment,branch,mu,noise_multiplier,epsilon,secure_aggregation,seed,rounds,local_epochs,selected_epoch,dataset_manifest_sha256,CARE,Coverage,Earliness,Reliability,Accuracy
-noise_1_20261026T223000_895383Z,F4,fedper_private,0.0,1.0,2.8196264952625807,True,42,100,1,87,1a43906dd01a0ed2f5a8fee5f40cccda949e6fa85c24c80851c79ae3381165b4,0.5901099177723015,0.2397412873285319,0.14575101019592568,0.6043956043956044,0.9803308434707227

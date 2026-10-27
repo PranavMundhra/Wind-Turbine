@@ -6,10 +6,12 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 /data/
-results/runs/*
-!results/runs/.gitkeep
+# Full run folders (weights, per-row scores); `summarise` copies their small files to results/paper.
+results/runs/
+results/smoke/
 *.parquet
 *.h5
 *.keras
+*.npz
 /dist/
 .env

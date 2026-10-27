@@ -5,18 +5,21 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "windturbine"
 version = "0.1.0"
-description = "Normal-behaviour autoencoders for CARE to Compare Wind Farm C, and a route to federated learning"
+description = "Leak-free federated normal-behaviour models on CARE to Compare Wind Farm C"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = ["numpy", "pandas", "pyyaml"]
+license = {text = "MIT"}
 
 [project.optional-dependencies]
-# TensorFlow is only needed to train; scoring/audit/config tests run without it.
-train = ["tensorflow", "scikit-learn", "scipy", "pyarrow"]
-# Pin the tested F1 pair: older Flower releases conflict with TF 2.21's protobuf.
-federated = ["tensorflow==2.21.0", "flwr==1.40.0", "pyarrow", "dp-accounting"]
-eda = ["matplotlib", "seaborn", "statsmodels", "scikit-learn", "scipy"]
-dev = ["pytest", "ruff", "nbstripout", "pre-commit"]
+# Training: Keras 3 on the PyTorch backend (set in windturbine/__init__.py). Versions of the paper runs
+# are in requirements-lock.txt. Scoring, the audit and the summary need none of these.
+train = ["torch>=2.11", "keras>=3.15,<4", "flwr==1.40.0", "dp-accounting>=0.6", "pyarrow", "scikit-learn",
+         "scipy", "matplotlib"]
+dev = ["pytest", "ruff", "pre-commit"]
+
+[project.scripts]
+windturbine = "windturbine.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

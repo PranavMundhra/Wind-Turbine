@@ -71,7 +71,7 @@ def test_secure_aggregation_rejects_invalid_rounds(bad):
 
 def test_strategy_preflight_gates_pass():
     pytest.importorskip("flwr")
-    pytest.importorskip("tensorflow")
+    pytest.importorskip("torch")
     result = run_strategy_preflight()
     assert result["passed"] and result["fedprox_mu0_equals_plain"]
     assert result["secure_aggregation_max_abs_error"] < 1e-6
@@ -80,28 +80,32 @@ def test_strategy_preflight_gates_pass():
 
 
 def test_dp_sgd_clipping_matches_per_example_jacobian():
-    tf = pytest.importorskip("tensorflow")
-    from windturbine.models import build_autoencoder
-    from windturbine.models.autoencoder import _dense_stack
+    torch = pytest.importorskip("torch")
+    import keras
+
+    from windturbine.models import build_autoencoder, train_epochs
+    from windturbine.models.autoencoder import _dense_stack, _forward
 
     cfg = Config(hidden_layers=(6, 3, 6), use_lr_plateau=False)
     model = build_autoencoder(5, cfg, seed=2)
-    batch = tf.constant(np.random.default_rng(0).normal(size=(9, 5)).astype(np.float32))
+    batch = np.random.default_rng(0).normal(size=(9, 5)).astype(np.float32)
     clip = 0.3
-    with tf.GradientTape() as tape:
-        losses = tf.reduce_mean(tf.square(batch - model(batch, training=True)), axis=1)
-    jacobians = [j.numpy() for j in tape.jacobian(losses, model.trainable_variables)]
-    norms = np.sqrt(sum(np.square(j.reshape(9, -1)).sum(axis=1) for j in jacobians))
+    before = model.get_weights()
+    # Per-example gradients from an independent autograd pass, one example at a time.
+    jacobians = []
+    for row in batch:
+        params = [torch.tensor(w, requires_grad=True) for w in before]
+        out, _, _ = _forward(params, torch.tensor(row[None]), len(before) // 2)
+        loss = torch.mean(torch.square(torch.tensor(row[None]) - out))
+        jacobians.append([g.numpy() for g in torch.autograd.grad(loss, params)])
+    norms = np.sqrt([sum(np.square(g).sum() for g in grads) for grads in jacobians])
     factors = np.minimum(1.0, clip / norms)
     assert factors.min() < 1  # the fixture actually clips
-    expected = [np.tensordot(factors, j, axes=1) / 9 for j in jacobians]
+    expected = [sum(f * grads[i] for f, grads in zip(factors, jacobians)) / 9 for i in range(len(before))]
     # One SGD step with lr=1 exposes the clipped gradient as the weight change.
-    model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=1.0), loss="mse")
-    before = model.get_weights()
-    from windturbine.models import train_epochs
-
-    train_epochs(model, batch.numpy(), epochs=1, batch_size=9, seed=0, dp_clip_norm=clip, dp_noise_multiplier=0.0)
-    assert len(_dense_stack(model)) == 4
+    model.compile(optimizer=keras.optimizers.SGD(learning_rate=1.0), loss="mse")
+    train_epochs(model, batch, epochs=1, batch_size=9, seed=0, dp_clip_norm=clip, dp_noise_multiplier=0.0)
+    assert len(_dense_stack(model, True)[1]) == 4
     for start, end, gradient in zip(before, model.get_weights(), expected, strict=True):
         # Shuffling permutes rows, which does not change a sum over the batch.
         np.testing.assert_allclose(start - end, gradient, rtol=1e-4, atol=1e-6)
@@ -120,7 +124,7 @@ def test_invalid_strategy_settings_fail_before_any_run(tmp_path, change, message
     cfg = replace(Config(), use_lr_plateau=False, extra=change)
     with pytest.raises((ValueError, TypeError), match=message):
         strategy_options(cfg)
-    pytest.importorskip("tensorflow")
+    pytest.importorskip("torch")
     with pytest.raises((ValueError, TypeError), match=message):
         run_federated(tmp_path / "missing", tmp_path / "out", cfg, experiment="F2")
     assert not (tmp_path / "out").exists()
@@ -143,7 +147,7 @@ def _selected(output, branch, clients):
 
 def test_fedper_shares_encoder_and_keeps_decoders_local(tmp_path):
     pytest.importorskip("flwr")
-    pytest.importorskip("tensorflow")
+    pytest.importorskip("torch")
     dataset, cfg = _make_export(tmp_path)
     cfg = replace(cfg, extra={**cfg.extra, "strategy": "fedper", "local_epochs": 1,
                               "shared_layers": ["hidden_00", "hidden_01"],
@@ -169,7 +173,7 @@ def test_fedper_shares_encoder_and_keeps_decoders_local(tmp_path):
 
 def test_engine_fedavg_matches_f1_and_fedprox_mu0_matches_fedavg(tmp_path):
     pytest.importorskip("flwr")
-    pytest.importorskip("tensorflow")
+    pytest.importorskip("torch")
     dataset, cfg = _make_export(tmp_path)
     f1 = run_fedavg(dataset, tmp_path / "F1", cfg, run_centralized=False)
     fedavg = run_federated(dataset, tmp_path / "avg", replace(cfg, extra={**cfg.extra, "strategy": "fedavg"}),
@@ -199,7 +203,7 @@ def test_engine_fedavg_matches_f1_and_fedprox_mu0_matches_fedavg(tmp_path):
 
 def test_private_run_reports_epsilon_and_secure_sum(tmp_path):
     pytest.importorskip("flwr")
-    pytest.importorskip("tensorflow")
+    pytest.importorskip("torch")
     pytest.importorskip("dp_accounting")
     dataset, cfg = _make_export(tmp_path)
     base = {**cfg.extra, "strategy": "fedavg", "secure_aggregation": True, "dp_clip_norm": 1.0,
