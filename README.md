@@ -39,6 +39,11 @@ python -m windturbine figures                                               # Fi
 The outputs are `results/paper/table_I.md`, `table_I.csv`, `bootstrap_vs_D.csv` and
 `figures/fig4_validation_and_care.pdf`.
 
+For a guided version, open [`notebooks/reproduce.ipynb`](notebooks/reproduce.ipynb). It shows the same
+tables and figure with explanations, the convergence checks behind the notes below, which events change
+between local training and FedAvg, and the leakage-audit evidence. It is stored with its outputs, so it can
+be read on GitHub without running anything.
+
 ## Results
 
 Seed 42, 58 events (27 with an anomaly, 31 normal). Higher is better for every score.
@@ -164,6 +169,7 @@ roughly 7 hours of wall time with `--jobs 3`; the priority subset is roughly 2 h
 
 | Paper | Code | Config / results |
 |---|---|---|
+| Exploratory analysis behind the feature choice (Sec. III) | `notebooks/01_eda.ipynb` | – |
 | Leakage audit (Sec. III, Fig. 1) | `src/windturbine/audit/`, `notebooks/02_leakage_audit.ipynb` | `results/leakage_audit/` |
 | Leak-free clients (Sec. IV) | `src/windturbine/data/clients.py` | `configs/clients.yaml` |
 | Autoencoder and training step | `src/windturbine/models/autoencoder.py` | `configs/base.yaml` |
@@ -171,7 +177,7 @@ roughly 7 hours of wall time with `--jobs 3`; the priority subset is roughly 2 h
 | FedAvg (F1), centralised comparator | `src/windturbine/federated/fedavg.py` | `configs/paper/F1.yaml`, `central.yaml` |
 | FedPer (F2), FedProx (F3), private (F4) | `src/windturbine/federated/strategies.py` | `configs/paper/F2.yaml`, `F3_mu*.yaml`, `F4_sigma*.yaml` |
 | CARE score and thresholds | `src/windturbine/scoring/` | – |
-| Table I, bootstrap, Fig. 4 | `src/windturbine/summary.py` | `results/paper/` |
+| Table I, bootstrap, Fig. 4 | `src/windturbine/summary.py`, `notebooks/reproduce.ipynb` | `results/paper/` |
 | Command line | `src/windturbine/__main__.py`, `experiments.py` | – |
 
 Each committed run folder in `results/paper/<experiment>/s<seed>/` contains `results.json` (CARE and its
