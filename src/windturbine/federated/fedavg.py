@@ -163,20 +163,20 @@ def run_preflight():
 
 
 def _tensorflow_compatibility_gate():
-    import tensorflow as tf
+    import keras
 
     from windturbine.config import Config
 
     cfg = Config(hidden_layers=(3, 2, 3), learning_rate=0.001, batch_size=8, use_lr_plateau=False)
     rng = np.random.default_rng(915)
     counts = {1: 3, 2: 5, 3: 8}
-    tf.keras.backend.clear_session()
+    keras.backend.clear_session()
     model = build_autoencoder(2, cfg)
     initial = model.get_weights()
     del model
     updates = []
     for aid, count in counts.items():
-        tf.keras.backend.clear_session()
+        keras.backend.clear_session()
         model = build_autoencoder(2, cfg, seed=aid)
         model.set_weights(initial)
         x = rng.normal(size=(count, 2)).astype(np.float32)
@@ -191,16 +191,16 @@ def _tensorflow_compatibility_gate():
         restored = load_checkpoint(path)
     for left, right in zip(aggregated, restored, strict=True):
         np.testing.assert_array_equal(left, right)
-    tf.keras.backend.clear_session()
+    keras.backend.clear_session()
     model = build_autoencoder(2, cfg)
     model.set_weights(restored)
     loss = mean_squared_error(model, x)
     if not any(not np.array_equal(one, two) for one, two in zip(initial, restored, strict=True)):
         raise AssertionError("TensorFlow compatibility gate did not update any model parameter")
     del model
-    tf.keras.backend.clear_session()
+    keras.backend.clear_session()
     return {"passed": True, "clients": len(counts), "validation_mse": loss,
-            "checkpoint_roundtrip": True, "tensorflow_version": tf.__version__}
+            "checkpoint_roundtrip": True, "keras_backend": f"{keras.backend.backend()} {__import__('torch').__version__}"}
 
 
 def _plain(value):
@@ -301,10 +301,10 @@ def _validation(model, cache, val_counts, epoch, history):
 
 def _score_selected(root, branch_dir, cfg, weights, schema, events):
     """Score every client; ``weights`` is one global model or a dict of per-client models."""
-    import tensorflow as tf
+    import keras
 
     personal = isinstance(weights, dict)
-    tf.keras.backend.clear_session()
+    keras.backend.clear_session()
     model = build_autoencoder(len(schema), cfg)
     if not personal:
         model.set_weights(weights)
@@ -373,7 +373,7 @@ def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_cent
     Fixed budgets run to completion, then choose the lowest row-weighted normal
     validation MSE. Prediction windows never enter optimization or selection.
     """
-    import tensorflow as tf
+    import keras
 
     if not isinstance(run_centralized, bool):
         raise TypeError("run_centralized must be a boolean")
@@ -396,8 +396,8 @@ def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_cent
     root, output = Path(dataset_root).resolve(), Path(output_root).resolve()
     if output.exists():
         raise FileExistsError(f"Refusing to overwrite completed or partial run: {output}")
-    tf.keras.utils.set_random_seed(cfg.seed)
-    tf.config.experimental.enable_op_determinism()
+    keras.utils.set_random_seed(cfg.seed)
+    __import__("torch").use_deterministic_algorithms(True)
     preflight = run_preflight()
     output.parent.mkdir(parents=True, exist_ok=True)
     started = time.perf_counter()
@@ -406,7 +406,7 @@ def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_cent
         dataset, frozen, cache, counts, val_counts, events = _prepare_dataset(root, stage, cfg)
         publish = stage / "publish"
         publish.mkdir()
-        tf.keras.backend.clear_session()
+        keras.backend.clear_session()
         model = build_autoencoder(len(dataset["schema"]), cfg)
         initial = model.get_weights()
         contract = parameter_contract(model, dataset["schema"])
@@ -431,7 +431,7 @@ def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_cent
             updates = []
             broadcast_hash = _parameter_hash(global_weights)
             for aid, count in counts.items():
-                tf.keras.backend.clear_session()
+                keras.backend.clear_session()
                 seed = _seed(cfg.seed, server_round, aid)
                 model = build_autoencoder(len(dataset["schema"]), cfg, seed=seed)
                 model.set_weights(global_weights)
@@ -450,7 +450,7 @@ def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_cent
                 del model
             global_weights = aggregate_updates(updates, expected_counts=counts, schema_hash=dataset["schema_hash"],
                                                reference=initial, server_round=server_round)
-            tf.keras.backend.clear_session()
+            keras.backend.clear_session()
             model = build_autoencoder(len(dataset["schema"]), cfg)
             model.set_weights(global_weights)
             value = _validation(model, cache, val_counts, server_round, history)
@@ -478,7 +478,7 @@ def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_cent
         if run_centralized:
             central_dir = publish / "centralized"
             central_dir.mkdir()
-            tf.keras.backend.clear_session()
+            keras.backend.clear_session()
             model = build_autoencoder(len(dataset["schema"]), cfg)
             model.set_weights(initial)
             history, epoch_rows = [], [{"epoch": 0, "validation_mse": initial_validation_mse, "row_exposures": 0}]
@@ -519,7 +519,7 @@ def run_fedavg(dataset_root, output_root, cfg, *, source_identity=None, run_cent
         for name, branch in branches.items():
             weights = load_checkpoint(publish / branch["checkpoint"])
             _check_parameters(weights, initial)
-            tf.keras.backend.clear_session()
+            keras.backend.clear_session()
             model = build_autoencoder(len(dataset["schema"]), cfg)
             model.set_weights(weights)
             readback = _validation(model, cache, val_counts, branch["selected_epoch"], [])

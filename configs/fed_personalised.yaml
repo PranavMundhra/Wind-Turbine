@@ -17,5 +17,5 @@ extra:
   aggregation_weight: n_rows_after_leak_removal
   scaler: local                    # ADR 0002
   threshold: local                 # ADR 0002
-  expected_dataset_manifest_sha256: bb2ed3ffc84adbf79bbba624941090acd91831097f427b38b2e20885d4b0b1d1
-  dataset_override_reason: null
+  expected_dataset_manifest_sha256: 1a43906dd01a0ed2f5a8fee5f40cccda949e6fa85c24c80851c79ae3381165b4  # Kaggle export: bb2ed3ffc84adbf79bbba624941090acd91831097f427b38b2e20885d4b0b1d1
+  dataset_override_reason: "Local E03 rebuild (D:/wt_work, 2026-10-26) from the same source CSVs; the Kaggle export bb2ed3ff is not on this machine. Per-turbine train/val counts match the Kaggle D evidence exactly (1,845,037 / 347,569)."

@@ -168,7 +168,7 @@ def run_strategy_preflight():
     unreachable clip norm must equal plain training, and a strong proximal pull
     must keep weights closer to the anchor than plain training does.
     """
-    import tensorflow as tf
+    import keras
 
     from windturbine.config import Config
 
@@ -192,10 +192,10 @@ def run_strategy_preflight():
     x = rng.normal(size=(20, 4)).astype(np.float32)
 
     def trained(**kwargs):
-        tf.keras.backend.clear_session()
+        keras.backend.clear_session()
         model = build_autoencoder(4, cfg, seed=3)
         # Plain SGD: Adam's division by sqrt(v) would amplify float rounding in tiny gradients.
-        model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=0.05), loss="mse")
+        model.compile(optimizer=keras.optimizers.SGD(learning_rate=0.05), loss="mse")
         start = model.get_weights()
         anchor = {index: weight for index, weight in enumerate(start)}
         train_epochs(model, x, epochs=2, batch_size=8, seed=5, anchor=anchor, **kwargs)
@@ -207,7 +207,7 @@ def run_strategy_preflight():
     _, prox_zero = trained(mu=0.0)
     _, dp_open = trained(dp_clip_norm=1e9, dp_noise_multiplier=0.0)
     _, prox_strong = trained(mu=10.0)  # lr*mu = 0.5 < 1: pulls without overshooting
-    tf.keras.backend.clear_session()
+    keras.backend.clear_session()
     for one, two in zip(plain, prox_zero, strict=True):
         np.testing.assert_array_equal(one, two)
     dp_error = max(float(np.abs(one - two).max()) for one, two in zip(plain, dp_open, strict=True))
@@ -268,7 +268,7 @@ def run_federated(dataset_root, output_root, cfg, *, experiment, source_identity
     the round with the lowest row-weighted validation MSE of the clients' own
     models is selected. Prediction windows never enter optimization or selection.
     """
-    import tensorflow as tf
+    import keras
 
     options = strategy_options(cfg)
     rounds, local_epochs = options["rounds"], options["local_epochs"]
@@ -280,8 +280,8 @@ def run_federated(dataset_root, output_root, cfg, *, experiment, source_identity
     root, output = Path(dataset_root).resolve(), Path(output_root).resolve()
     if output.exists():
         raise FileExistsError(f"Refusing to overwrite completed or partial run: {output}")
-    tf.keras.utils.set_random_seed(cfg.seed)
-    tf.config.experimental.enable_op_determinism()
+    keras.utils.set_random_seed(cfg.seed)
+    __import__("torch").use_deterministic_algorithms(True)
     preflight = {"fedavg": run_preflight(), "strategy": run_strategy_preflight()}
     output.parent.mkdir(parents=True, exist_ok=True)
     started = time.perf_counter()
@@ -292,7 +292,7 @@ def run_federated(dataset_root, output_root, cfg, *, experiment, source_identity
         n_features = len(dataset["schema"])
         publish = stage / "publish"
         publish.mkdir()
-        tf.keras.backend.clear_session()
+        keras.backend.clear_session()
         model = build_autoencoder(n_features, cfg)
         initial = model.get_weights()
         contract = parameter_contract(model, dataset["schema"])
@@ -305,7 +305,7 @@ def run_federated(dataset_root, output_root, cfg, *, experiment, source_identity
         reference = [initial[index] for index in shared]
         personal = {aid: [w.copy() for w in initial] for aid in counts}
         history, round_rows = [], []
-        tf.keras.backend.clear_session()
+        keras.backend.clear_session()
         model = build_autoencoder(n_features, cfg)
         initial_validation_mse = _personal_validation(model, cache, val_counts, personal, 0, history)
         best_value, best_round = initial_validation_mse, 0
@@ -321,7 +321,7 @@ def run_federated(dataset_root, output_root, cfg, *, experiment, source_identity
             broadcast = [personal[next(iter(counts))][index] for index in shared]
             broadcast_hash = _parameter_hash(broadcast)
             for aid, count in counts.items():
-                tf.keras.backend.clear_session()
+                keras.backend.clear_session()
                 seed = _seed(cfg.seed, server_round, aid)
                 model = build_autoencoder(n_features, cfg, seed=seed)
                 model.set_weights(personal[aid])
@@ -362,7 +362,7 @@ def run_federated(dataset_root, output_root, cfg, *, experiment, source_identity
                 personal[aid] = trained[aid]
                 for index, value in zip(shared, aggregated, strict=True):
                     personal[aid][index] = value
-            tf.keras.backend.clear_session()
+            keras.backend.clear_session()
             model = build_autoencoder(n_features, cfg)
             value = _personal_validation(model, cache, val_counts, personal, server_round, history)
             round_rows.append({"epoch": server_round, "validation_mse": value, "participating_clients": len(counts),
@@ -408,7 +408,7 @@ def run_federated(dataset_root, output_root, cfg, *, experiment, source_identity
         selected = {aid: load_checkpoint(branch_dir / "selected" / f"client_{aid}.npz") for aid in counts}
         for weights in selected.values():
             _check_parameters(weights, initial)
-        tf.keras.backend.clear_session()
+        keras.backend.clear_session()
         model = build_autoencoder(n_features, cfg)
         readback = _personal_validation(model, cache, val_counts, selected, best_round, [])
         np.testing.assert_allclose(readback, best_value, rtol=0, atol=1e-12)
