@@ -1,0 +1,10 @@
+# Private (F4, exploratory): F2 plus simulated secure aggregation and record-level
+# DP-SGD with noise multiplier 0 (0 = secure aggregation only). Epsilon is written
+# to fedper_private/privacy.json.
+inherits: [F2.yaml]
+arm: fed_private
+extra:
+  secure_aggregation: true
+  dp_noise_multiplier: 0.0
+  dp_clip_norm: 1.0
+  dp_delta: 1.0e-6

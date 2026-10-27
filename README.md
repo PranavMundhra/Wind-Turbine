@@ -1,101 +1,135 @@
-# Wind-Turbine: normal-behaviour autoencoders for CARE to Compare, Wind Farm C
+# Federated normal-behaviour models on CARE to Compare, Wind Farm C
 
-Fault detection on wind-turbine SCADA data, evaluated with the CARE score. Two training
-strategies are compared under identical preprocessing, architecture and scoring:
+Code and results for the paper *Federated normal-behaviour models for early fault detection on wind turbine
+SCADA data* (P. Mundhra, D. Poojary, A. Sharma, P. K. Loharkar; in preparation).
 
-| | Arm A: isolated | Arm B: pooled |
-|---|---|---|
-| Models | 58, one per event dataset | 1, fleet-wide |
-| CARE | 0.628 | 0.583 |
-| Events detected | 16 of 27 | 7 of 27 |
+The repository reproduces every number in the paper:
 
-These numbers are reported in [`docs/MODEL_DOCUMENTATION.md`](docs/MODEL_DOCUMENTATION.md);
-the arm notebooks in this repo have no stored outputs, so they are not yet reproducible
-from the repo alone. Two historical pooled runs differed by 0.013 CARE; that is
-not an established universal noise threshold.
+- **The leakage audit** (Section III, Fig. 1): rows duplicated across event files of the same turbine.
+- **The leak-free client export** (Section IV): 22 per-turbine clients in which no training row appears
+  in any prediction window.
+- **Table I and Fig. 4**: local training (D), FedAvg (F1), personalised FedPer (F2), the FedProx sweep
+  (F3), the exploratory private variant (F4) and the matched centralised comparator, all scored with CARE.
 
-The historical Phase 0 arms C and D were reported at 3 seeds each (CPU; full run artifacts are not included in this checkout):
+## Results
 
-| | Arm C: pooled, leaked rows removed | Arm D: one model per turbine, leak-free |
-|---|---|---|
-| CARE, mean ± sd of 3 seeds | 0.326 ± 0.288 | 0.611 ± 0.013 |
-| CARE at seed 42 | 0.543 | 0.625 |
+`results/paper/` holds the small files of every run behind the paper (results, per-event decisions,
+thresholds, training curves, privacy accounting and the full run manifest); model weights and per-row
+scores are not committed. Table I is rebuilt from those files with:
 
-D's historical result is close to A, and C's results are sensitive to the three-turbine
-validation holdout. Matched reruns are needed to identify the causes: details in
-[C](docs/experiments/C_pooled_dedup.md) and [D](docs/experiments/D_local_per_turbine.md).
+```bash
+python -m windturbine summarise --runs results/paper --out results/paper
+```
 
-The updated D notebook has now completed a Kaggle run using the shared E03 exports
-and corrected evaluation eligibility. Seed 42 achieved **CARE 0.639852**, detecting
-**14 of 27 anomalies**, with **6 false alarms** across 31 normal events. All 22
-clients and 58 events completed. The [saved run evidence](results/evidence/D/20261015T014242Z_2525b30e_s42/README.md)
-includes the executed notebook and extracted event table.
+Seed 42, as reported in the paper (`results/paper/table_I.md`):
 
-This is one run of the new pipeline; the earlier table remains historical.
-**Federated implementation and an exploratory pilot can proceed**, with restricted
-SGD-equivalence, cohort/metric-parity checks and a matched centralized comparator
-required before interpreting results. See the [transition assessment](docs/FEDERATED_TRANSITION_2026_10_15.md).
+| Experiment | CARE | Coverage | Earliness | Reliability | Accuracy | Detected / 27 | False alarms / 31 |
+|---|---|---|---|---|---|---|---|
+| Local training (D) | 0.640 | 0.369 | 0.295 | 0.654 | 0.941 | 14 | 6 |
+| Centralised comparator, sequential order | 0.640 | 0.316 | 0.244 | 0.723 | 0.960 | 12 | 2 |
+| FedAvg (F1) | 0.636 | 0.353 | 0.294 | 0.654 | 0.940 | 14 | 6 |
+| Personalised (F2) | 0.625 | 0.296 | 0.251 | 0.663 | 0.958 | 11 | 3 |
+| FedProx μ = 0 / 0.001 / 0.01 / 0.1 | 0.636 / 0.632 / 0.636 / 0.639 | | | | | | |
+| FedProx μ = 1 / 10 | 0.616 / 0.590 | | | | | | |
+| Private (F4), σ = 0 / 0.5 / 1 / 2 / 4 | 0.614 / 0.590 / 0.590 / 0.596 / 0.596 | | | | | | |
 
-F1 is now implemented in [30_fedavg.ipynb](notebooks/30_fedavg.ipynb), with shared
-Flower aggregation and a matched centralized comparator. Both use the exact E03
-exports and validation-only checkpoint selection. See the [F1 Kaggle guide](docs/FEDAVG.md).
-Real-data F1 results are still pending.
+F4's ε (δ = 10⁻⁶, RDP accountant) is 22.2, 2.82, 1.05 and 0.47 for σ = 0.5, 1, 2 and 4
+(`results/paper/F4_sigma*/s42/fedper_private/privacy.json`).
 
-**Key finding:** the published data duplicates rows across event files. 25.4% of the pooled
-arm's evaluation rows were also in its training set. The evidence is in
-[`results/leakage_audit/`](results/leakage_audit/). **Next step:** federated learning with
-one client per turbine; see [`docs/ROADMAP.md`](docs/ROADMAP.md).
+`summarise` also writes `bootstrap_vs_D.csv`: 95% intervals for each CARE difference from D, resampling
+turbines rather than events (the 58 events come from 22 turbines). At seed 42 every interval contains zero.
 
-## Experiments
+### Provenance and two caveats
 
-All experiments, from Arm A to the planned federated arms, are defined in
-[`docs/experiments/`](docs/experiments/README.md) and connected in the
-[experiment graph](docs/experiments/EXPERIMENT_GRAPH.md). The single source of truth is
-[`experiments/registry.yaml`](experiments/registry.yaml); `make check` verifies the repo
-against it. What was wrong with the original layout and how it is fixed:
-[`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
+- **D** was trained on Kaggle (TensorFlow, client export `bb2ed3ff…`); its committed `results.json`
+  and `per_event.csv` were copied from notebook output at six decimals (`results/paper/D/s42/evidence.json`).
+  **All other rows** were trained on one RTX 5070 Ti with Keras 3 on PyTorch, on a local rebuild of the
+  export (`1a43906d…`) with identical per-turbine row counts. New runs of D use the same PyTorch training
+  step as F1–F4 (`src/windturbine/local.py`), so multi-seed runs remove this difference.
+- **The comparator in the paper** (`central_sequential`) trained each epoch one turbine at a time in
+  random turbine order. The model drifts toward the last turbine of each epoch: its best validation MSE
+  came at epoch 2 (0.50), rising to 0.91 by epoch 100. The `central` experiment shuffles minibatches
+  across all turbines and is the comparator to use from now on.
+
+## Installation
+
+Python 3.10 or later. Training needs PyTorch; install the CUDA build for your GPU first
+(see pytorch.org), then:
+
+```bash
+pip install -e ".[train,dev]"
+python -m pytest -q
+```
+
+`requirements-lock.txt` lists the exact versions of the seed-42 runs. Scoring, the audit and the
+summary run without PyTorch (`pip install -e ".[dev]"`).
+
+## Data
+
+CARE to Compare is published on Zenodo under CC BY-SA 4.0:
+[doi:10.5281/zenodo.14006163](https://doi.org/10.5281/zenodo.14006163). It is not redistributed here.
+Download it and point the commands below at the folder that contains `Wind Farm C/`.
+
+## Reproducing the paper
+
+```bash
+# 1. Leak-free per-turbine clients (prints the dataset manifest hash)
+python -m windturbine build-clients --raw /path/to/CARE_To_Compare --out /path/to/clients
+
+# 2. Experiments; a run that already exists is skipped, so rerun the same command to resume
+python -m windturbine list
+python -m windturbine run all --seeds 42 --clients /path/to/clients --jobs 3
+
+# 3. Table I (mean ± SD over seeds, turbine-bootstrap intervals) and Fig. 4
+python -m windturbine summarise --runs results/runs --out results/paper
+python -m windturbine figures
+```
+
+`run` writes `results/runs/<experiment>/s<seed>/` and refuses to overwrite an existing run. Configs are in
+`configs/paper/`, one file per row of Table I. If your client export has a different manifest hash from
+the pinned one, `run` stops before training; pass `--dataset-sha <hash> --dataset-reason "<why>"`.
+
+**Multi-seed runs.** Partitions are fixed by the export, so seeds change only model initialisation and
+minibatch order:
+
+```bash
+# Priority subset first: the rows the paper's comparisons rest on
+python -m windturbine run D central F1 F2 F3_mu0.1 --seeds 42 43 44 45 46 --clients /path/to/clients --jobs 3
+# Then everything else
+python -m windturbine run all --seeds 43 44 45 46 --clients /path/to/clients --jobs 3
+```
+
+**Runtime.** On one RTX 5070 Ti with three runs in parallel, each run took 0.9–2.1 h (F3 with two local
+epochs is the slowest). One seed of all 15 experiments is about 20 run-hours, roughly 7 hours of wall
+time with `--jobs 3`. Use `--rounds 2` and `--set max_epochs=2` for a quick check that everything runs.
 
 ## Layout
 
 ```
-src/windturbine/   reusable client data, config, scoring, audit, runs, models and FedAvg
-experiments/       registry.yaml: every experiment, its files and its dependencies
-configs/           YAML run configs (base + per arm)
-notebooks/         data/audit, A-D baselines, 20 federated clients, 30 FedAvg
-results/           leakage_audit/ evidence; runs/ for new outputs (git-ignored)
-docs/              model documentation, roadmap, architecture, ADRs, companion PDF
-scripts/           registry check, graph renderer, run comparison, synthetic data
-tests/             pytest suite
+src/windturbine/
+  audit/            row fingerprints for the leakage audit
+  data/clients.py   leak-free per-turbine client export (its hash is pinned in every run)
+  models/           autoencoder and the PyTorch training step shared by all experiments
+  local.py          D: one model per turbine
+  federated/        F1 FedAvg and the centralised comparator; F2-F4 (FedPer, FedProx, DP-SGD, secure sum)
+  scoring/          CARE, thresholds, reconstruction error
+  experiments.py    config loading and dispatch; __main__.py is the command line
+  summary.py        Table I, turbine bootstrap, Fig. 4
+configs/            base.yaml, clients.yaml (export), paper/ (one file per Table I row)
+notebooks/          02_leakage_audit.ipynb: the audit behind Fig. 1, with its outputs
+results/            paper/ (committed run files), leakage_audit/ (audit evidence)
+tests/              pytest; the training tests run on CPU with tiny synthetic data
 ```
 
-## Setup
+The project history, including the earlier arms A–C, Kaggle notebooks and planning documents, is kept
+in commit `33e11e6` (tag it `pre-paper-cleanup` if you like); the exact code of the seed-42 runs is commit `73ffab0`.
 
-```bash
-pip install -e ".[dev]"      # tests, lint
-pip install -e ".[train]"    # adds TensorFlow etc. for the notebooks
-pip install -e ".[federated]" # pinned TensorFlow/Flower pair for F1
-make check test
-```
+## Citation
 
-For Kaggle, run [`notebooks/20_federated_clients.ipynb`](notebooks/20_federated_clients.ipynb)
-on CPU with the source dataset and the packaged bridge attached. It builds immutable,
-verified clients; the updated Arm D loads those exact arrays. See the
-[Kaggle instructions and federated handoff](docs/CLIENT_BRIDGE.md). Build the source
-bundle with `python scripts/package_kaggle_bridge.py`; internet is optional.
+See `CITATION.cff`, or cite the paper once published. Please also cite the dataset:
+C. Gück, C. M. A. Roelofs and S. Faulstich, "CARE to Compare: A real-world benchmark dataset for early
+fault detection in wind turbine data," *Data*, vol. 9, no. 12, art. no. 138, 2024.
 
-The data is the CARE to Compare Wind Farm C set (Kaggle:
-`azizkasimov/wind-turbine-scada-data-for-early-fault-detection`). Set `WT_DATA_ROOT` or `dataset_root` in `configs/base.yaml`; the notebooks still contain the Kaggle path until they adopt `windturbine.paths`.
+## Licence
 
-## Status
-
-Restructure in progress (roadmap phase R). Done and tested: `scoring`, `audit`, `config`, `runs`, `paths`, the experiment registry and its checks.
-The extracted functions were checked against the notebook originals on random inputs.
-The E03 data bridge and D integration are implemented and tested locally. The supplied
-Kaggle execution records verified loading of all 22 clients and completed the new D
-baseline at seed 42. Full-precision run artifacts still need archiving; multiple-seed
-matched comparisons and real-data federated training remain outstanding. F1 now
-has a Kaggle notebook, real Flower aggregation, checkpoint artifacts and synthetic
-integration tests. Its TensorFlow/Flower dependencies are pinned; run manifests
-record the resolved environment.
-Not done: extraction of the older A/B/C data/model code, `runners`, personalized
-federation, a full historical environment lock, and a LICENSE (the owner must choose one).
+Code: MIT (see `LICENSE`). The CARE to Compare data keep their own CC BY-SA 4.0 licence.

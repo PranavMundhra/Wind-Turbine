@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite it as below, and cite the CARE to Compare dataset."
+title: "Federated normal-behaviour models for early fault detection on wind turbine SCADA data: code and results"
+type: software
+license: MIT
+repository-code: "https://github.com/PranavMundhra/Wind-Turbine"
+authors:
+  - family-names: Mundhra
+    given-names: Pranav
+  - family-names: Poojary
+    given-names: Devesh
+  - family-names: Sharma
+    given-names: Anushka
+  - family-names: Loharkar
+    given-names: Praveen Kumar
+keywords:
+  - federated learning
+  - wind turbines
+  - SCADA
+  - anomaly detection
+  - CARE to Compare
+references:
+  - type: dataset
+    title: "Wind turbine SCADA data for early fault detection"
+    authors:
+      - family-names: Gück
+        given-names: Christian
+      - family-names: Roelofs
+        given-names: Cyriana M. A.
+    doi: 10.5281/zenodo.14006163
+    publisher:
+      name: Zenodo

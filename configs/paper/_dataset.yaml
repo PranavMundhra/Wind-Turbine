@@ -1,0 +1,14 @@
+# The frozen E03 client export every paper run uses. Pinning its manifest hash makes a
+# run fail before training if it is pointed at a different export.
+# 1a43906d... is the local rebuild used for the seed-42 GPU runs (same per-turbine
+# fitting/validation counts as the Kaggle export bb2ed3ff... used by the first D run).
+# Using another export: pass --dataset-sha and --dataset-reason to the CLI.
+extra:
+  expected_clients: 22
+  expected_events: 58
+  n_clients: 22
+  client_unit: asset_id
+  remove_rows_seen_in_prediction: true
+  fingerprint_decimals: 6
+  expected_dataset_manifest_sha256: 1a43906dd01a0ed2f5a8fee5f40cccda949e6fa85c24c80851c79ae3381165b4
+  dataset_override_reason: "Local E03 rebuild from the CARE to Compare Wind Farm C CSVs; per-turbine fitting/validation counts match the Kaggle export bb2ed3ff (1,845,037 / 347,569)."

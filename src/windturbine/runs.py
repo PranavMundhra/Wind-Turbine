@@ -33,7 +33,7 @@ import yaml
 
 RESULT_KEYS = ("coverage", "earliness", "reliability", "accuracy", "care", "tp", "fp", "fn", "tn")
 PER_EVENT_COLUMNS = ("event_id", "asset_id", "event_label", "detected", "max_criticality")
-TRACKED_PACKAGES = ("numpy", "pandas", "scikit-learn", "scipy", "tensorflow", "keras", "flwr", "pyarrow")
+TRACKED_PACKAGES = ("numpy", "pandas", "scikit-learn", "scipy", "torch", "keras", "flwr", "pyarrow", "dp-accounting")
 
 
 def _plain(obj):

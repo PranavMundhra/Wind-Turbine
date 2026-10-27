@@ -18,7 +18,7 @@ from windturbine.scoring import reconstruction_error
 
 def test_preflight_uses_flower_multiple_rounds_and_unequal_counts():
     pytest.importorskip("flwr")
-    pytest.importorskip("tensorflow")
+    pytest.importorskip("torch")
     result = run_preflight()
     assert result["passed"]
     assert result["sgd_equivalence"]["rounds"] == 3
@@ -99,9 +99,9 @@ def _make_export(tmp_path):
     return dataset, cfg
 
 
-def test_real_tensorflow_flower_end_to_end_checkpoint_calibration_and_metric_parity(tmp_path):
+def test_real_keras_flower_end_to_end_checkpoint_calibration_and_metric_parity(tmp_path):
     pytest.importorskip("flwr")
-    pytest.importorskip("tensorflow")
+    pytest.importorskip("torch")
     dataset, cfg = _make_export(tmp_path)
     cfg = replace(cfg, seed=43)  # immutable partition seed stays 42
     output = tmp_path / "F1"
@@ -162,7 +162,7 @@ def test_real_tensorflow_flower_end_to_end_checkpoint_calibration_and_metric_par
     ({"global_patience": 3}, "fixed matched"),
 ])
 def test_unsupported_experiment_options_fail_before_any_run(tmp_path, change, message):
-    pytest.importorskip("tensorflow")
+    pytest.importorskip("torch")
     cfg = replace(Config(), use_lr_plateau=False, extra=change)
     with pytest.raises(ValueError, match=message):
         run_fedavg(tmp_path / "missing", tmp_path / "output", cfg)
@@ -171,7 +171,7 @@ def test_unsupported_experiment_options_fail_before_any_run(tmp_path, change, me
 
 def test_source_manifest_pin_is_required_and_wrong_pin_fails_atomically(tmp_path):
     pytest.importorskip("flwr")
-    pytest.importorskip("tensorflow")
+    pytest.importorskip("torch")
     dataset, cfg = _make_export(tmp_path)
     for extra, message in (({**cfg.extra, "expected_dataset_manifest_sha256": "bad"}, "does not match"),
                            ({**cfg.extra, "expected_dataset_manifest_sha256": None,

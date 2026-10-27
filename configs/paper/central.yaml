@@ -1,0 +1,8 @@
+# Matched centralised comparator: same rows, initial weights and number of passes as F1,
+# trained on the union with minibatches shuffled across all turbines.
+inherits: [_federated.yaml]
+arm: centralised
+extra:
+  runner: central
+  strategy: fedavg
+  central_order: pooled_shuffle

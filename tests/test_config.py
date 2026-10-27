@@ -14,14 +14,10 @@ def test_defaults_match_the_paper_and_notebook_values():
     assert c.care_weights == (1, 1, 1, 2) and c.score_quantile == 0.99
 
 
-def test_arm_configs_load_and_differ_only_where_intended():
-    iso = load_config(CONFIGS / "base.yaml", CONFIGS / "arm_isolated.yaml")
-    pooled = load_config(CONFIGS / "base.yaml", CONFIGS / "arm_pooled.yaml")
-    assert (iso.arm, pooled.arm) == ("isolated", "pooled")
-    assert iso.hidden_layers == pooled.hidden_layers
-    # In the notebooks the arm alone decides the split level: isolated = blocked in
-    # time within an event; pooled = whole turbines held out (val_fraction of 22 -> 3).
-    assert iso.val_fraction == pooled.val_fraction == 0.15
+def test_client_export_config_matches_the_paper_partitions():
+    cfg = load_config(CONFIGS / "base.yaml", CONFIGS / "clients.yaml")
+    assert (cfg.val_split_mode, cfg.val_block_hours, cfg.val_fraction) == ("blocked", 120, 0.15)
+    assert cfg.extra["remove_rows_seen_in_prediction"] and cfg.extra["fingerprint_decimals"] == 6
 
 
 def test_unknown_key_is_rejected(tmp_path):

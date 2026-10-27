@@ -14,7 +14,8 @@ def reconstruction_error(model, X, batch_size: int = 8192) -> np.ndarray:
     out = np.empty(len(X), dtype=np.float32)
     for i in range(0, len(X), batch_size):
         chunk = X[i : i + batch_size]
-        rec = model(chunk, training=False).numpy()
+        rec = model(chunk, training=False)
+        rec = rec.detach().cpu().numpy() if hasattr(rec, "detach") else rec.numpy()  # torch or TF backend
         out[i : i + len(chunk)] = np.linalg.norm(chunk - rec, axis=1)
     return out
 

@@ -1,0 +1,13 @@
+# Shared by F1-F4 and the centralised comparator: fixed learning rate, fixed budget,
+# every client every round, local scalers and thresholds (Section IV of the paper).
+inherits: [_dataset.yaml]
+use_lr_plateau: false
+extra:
+  framework: flwr
+  fraction_fit: 1.0
+  rounds: 100
+  local_epochs: 1
+  max_hours: 11                    # stop early if the pace projects past this budget
+  aggregation_weight: n_rows_after_leak_removal
+  scaler: local
+  threshold: local

@@ -1,0 +1,21 @@
+{
+  "coverage": 0.369207,
+  "earliness": 0.294633,
+  "reliability": 0.654206,
+  "accuracy": 0.940607,
+  "care": 0.639852,
+  "tp": 14,
+  "fp": 6,
+  "fn": 13,
+  "tn": 25,
+  "support": {
+    "coverage": 27,
+    "earliness": 27,
+    "accuracy": 31
+  },
+  "seed": 42,
+  "n_clients": 22,
+  "n_events": 58,
+  "training_minutes": 109.58487513462703,
+  "precision": "metrics copied from notebook stdout at 6 decimal places; not original results.json"
+}

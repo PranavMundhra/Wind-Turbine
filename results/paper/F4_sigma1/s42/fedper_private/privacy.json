@@ -1,0 +1,38 @@
+{
+  "accountant": "dp_accounting 0.6.0 RDP",
+  "clip_norm": 1.0,
+  "delta": 1e-06,
+  "epsilon_by_client": {
+    "12": 1.6571376756991494,
+    "13": 2.8196264952625807,
+    "14": 2.666340687994973,
+    "15": 1.7636953756346916,
+    "16": 1.2879953409213494,
+    "2": 1.9131656759207893,
+    "21": 1.9401936580036656,
+    "23": 1.5313304546071875,
+    "32": 1.9718579586725324,
+    "33": 1.8589912428868205,
+    "34": 1.3540323825447784,
+    "35": 1.4343149634275267,
+    "38": 2.0230456145967777,
+    "42": 1.9770703337898712,
+    "43": 1.6531026996895417,
+    "44": 1.888472078385334,
+    "5": 2.585199267339487,
+    "50": 1.8944580731940173,
+    "52": 1.5731612442302931,
+    "53": 1.4619840561087911,
+    "55": 1.5242650607684531,
+    "56": 1.9653662593560943
+  },
+  "epsilon_max": 2.8196264952625807,
+  "mechanism": "per-example clipping and Gaussian noise on every local step",
+  "noise_multiplier": 1.0,
+  "not_covered": [
+    "server checkpoint selection sees each turbine's validation MSE",
+    "local thresholds and scores use non-private validation rows"
+  ],
+  "sampling_assumption": "Poisson sampling at q=batch_size/rows; training uses shuffled fixed-size batches, so epsilon is the standard approximation",
+  "unit": "one 10-minute sensor record of one turbine (record-level DP-SGD)"
+}

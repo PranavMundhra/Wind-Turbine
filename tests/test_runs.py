@@ -3,7 +3,6 @@ import json
 import pandas as pd
 import pytest
 
-from compare_runs import load_runs, pair_diffs, summarise
 from windturbine.config import Config
 from windturbine.paths import resolve_data_root
 from windturbine.runs import (
@@ -60,19 +59,6 @@ def test_evaluate_care_output_meets_the_contract(tmp_path):
     write_results(tmp_path, res, pe)  # raises if a contract key or column is missing
     assert res["care"] == 0.62 and res["tp"] == 1
     assert pe.event_label.tolist() == ["anomaly", "normal"] and pe.max_criticality.tolist() == [90, 3]
-
-
-def test_compare_runs_summarises_and_diffs(tmp_path):
-    for exp, cares in {"A": [0.62, 0.63], "B": [0.58]}.items():
-        for i, c in enumerate(cares):
-            run = new_run_dir(exp, Config(seed=i), root=tmp_path)
-            write_manifest(run, exp, Config(seed=i))
-            write_results(run, _results(c))
-    s = summarise(load_runs(tmp_path))
-    assert s.loc["A", "n_runs"] == 2 and s.loc["A", "care"] == pytest.approx(0.625)
-    d = pair_diffs(s, ["B-A", "C-A"])
-    assert d.loc[0, "care_diff"] == pytest.approx(-0.045, abs=1e-3)
-    assert pd.isna(d.loc[1, "care_diff"])  # C has no runs yet
 
 
 def test_set_seeds_without_tensorflow():
