@@ -19,6 +19,8 @@ jobs:
       # Table I must still rebuild exactly from the committed run files.
       - run: python -m windturbine summarise --runs results/paper --out results/paper --boot 200
       - run: git diff --exit-code -- results/paper/table_I.md
+      # The demo site must still match the committed run files.
+      - run: python site/build_data.py --check
       # The walkthrough notebook must still run end to end on the committed files.
       - run: pip install nbclient ipykernel
       - run: >-

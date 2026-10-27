@@ -15,6 +15,8 @@ prediction window.
 **Main result (seed 42):** no federated setting scored higher than local training (CARE 0.640). FedAvg
 and FedProx with μ ≤ 0.1 were within 0.008 of it; stronger proximal regularisation scored lower.
 
+**Interactive demo and reproduction guide:** <https://pranavmundhra.github.io/Wind-Turbine/> (source in [`site/`](site/)).
+
 ## Contents
 
 - [Quick start](#quick-start)

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Federated Wind-Turbine Fault Detection</title>
+<meta name="description" content="Interactive results and a step-by-step guide to reproducing federated fault detection on the CARE to Compare wind-farm benchmark.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Cg stroke='%230E7C86' stroke-width='2.4' stroke-linecap='round' fill='none'%3E%3Cpath d='M13 13V3M13 13l8.7 5M13 13L4.3 18'/%3E%3C/g%3E%3Ccircle cx='13' cy='13' r='2.6' fill='%230E7C86'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-head">
+  <div class="wrap">
+    <div class="bar">
+      <div class="brand">
+        <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><g stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M13 13 L13 3"/><path d="M13 13 L21.7 18"/><path d="M13 13 L4.3 18"/></g><circle cx="13" cy="13" r="2.6" fill="currentColor"/></svg>
+        <span>Wind-Turbine FL</span>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Sections">
+        <button class="tab" role="tab" id="tab-reproduce" aria-controls="view-reproduce" data-view="reproduce">Reproduce</button>
+        <button class="tab" role="tab" id="tab-present" aria-controls="view-present" data-view="present">Present</button>
+      </div>
+      <div class="spacer"></div>
+      <button class="ghost" id="present-btn" type="button">Full screen</button>
+      <button class="ghost" id="theme-btn" type="button">Dark mode</button>
+      <a class="ghost" href="https://github.com/PranavMundhra/Wind-Turbine" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <p class="result-line" id="result-line"></p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- PRESENT -->
+  <section class="view" id="view-present" role="tabpanel" aria-labelledby="tab-present" hidden>
+    <div class="slide" id="s-hero">
+      <div class="hero">
+        <h1>Can turbines learn together without sharing their data?</h1>
+        <p class="lead" id="hero-lead"></p>
+        <span class="chip"><i></i><span id="hero-chip"></span></span>
+      </div>
+      <div class="tiles" id="tiles"></div>
+    </div>
+
+    <div class="section slide" id="s-idea">
+      <h2>How it works</h2>
+      <div class="card idea">
+        <svg viewBox="0 0 340 170" role="img" aria-label="Turbines send model weights to a server, which sends the average back">
+          <g class="dg-node">
+            <circle cx="32" cy="24" r="9"/><circle cx="32" cy="58" r="9"/><circle cx="32" cy="92" r="9"/><circle cx="32" cy="126" r="9"/>
+          </g>
+          <text class="dg-note" x="32" y="154" text-anchor="middle" id="dg-turbines">turbines</text>
+          <path class="dg-line" d="M46 24 L196 64 M46 58 L196 74 M46 92 L196 86 M46 126 L196 96"/>
+          <rect class="dg-box" x="200" y="46" width="110" height="62" rx="12"/>
+          <text class="dg-text" x="255" y="74" text-anchor="middle">Server</text>
+          <text class="dg-note" x="255" y="92" text-anchor="middle">averages weights</text>
+          <text class="dg-note" x="120" y="22" text-anchor="middle">weights only</text>
+          <path class="dg-line" d="M255 112 L255 142 L60 142" stroke-dasharray="4 4"/>
+          <text class="dg-note" x="200" y="158" text-anchor="middle">new global model</text>
+        </svg>
+        <ul id="idea-list"></ul>
+      </div>
+    </div>
+
+    <div class="section slide" id="s-explorer">
+      <h2>Explore the results</h2>
+      <div class="card explorer">
+        <div class="ex-head">
+          <div class="seg" role="tablist" aria-label="Experiment" id="ex-tabs">
+            <button role="tab" data-tab="arms" aria-selected="true">Arms</button>
+            <button role="tab" data-tab="mu" aria-selected="false">FedProx μ</button>
+            <button role="tab" data-tab="priv" aria-selected="false">Privacy</button>
+            <button role="tab" data-tab="events" aria-selected="false">Events</button>
+          </div>
+          <div class="seg" id="metric-seg" aria-label="Metric">
+            <button data-m="care" aria-pressed="true">CARE</button>
+            <button data-m="coverage" aria-pressed="false">Coverage</button>
+            <button data-m="earliness" aria-pressed="false">Earliness</button>
+            <button data-m="reliability" aria-pressed="false">Reliability</button>
+            <button data-m="accuracy" aria-pressed="false">Accuracy</button>
+            <button data-m="diff" aria-pressed="false" title="Difference in CARE from local training, with its 95% interval">Δ vs local</button>
+          </div>
+        </div>
+
+        <div class="ex-body" id="ex-chart">
+          <div>
+            <div class="legend" id="legend"></div>
+            <div class="plot" id="plot"></div>
+            <div class="slider-row" id="slider-row" hidden>
+              <label for="slider" id="slider-label"></label>
+              <input type="range" id="slider" min="0" max="5" step="1" value="0">
+            </div>
+          </div>
+          <aside class="detail" id="detail" aria-live="polite"></aside>
+        </div>
+
+        <div id="ex-events" hidden>
+          <div class="ev-controls">
+            <div class="field"><label for="ev-a">Compare</label><select id="ev-a"></select></div>
+            <div class="field"><label for="ev-b">with</label><select id="ev-b"></select></div>
+            <div class="seg" id="ev-filter" aria-label="Filter events">
+              <button data-f="all" aria-pressed="true">All</button>
+              <button data-f="changed" aria-pressed="false">Changed</button>
+              <button data-f="fault" aria-pressed="false">Faults</button>
+              <button data-f="normal" aria-pressed="false">Normal</button>
+            </div>
+          </div>
+          <p class="sub" id="ev-summary"></p>
+          <div class="table-scroll"><table class="ev-table" id="ev-table"></table></div>
+        </div>
+
+        <p class="strip" id="strip"></p>
+      </div>
+    </div>
+
+    <div class="section slide" id="s-take">
+      <h2>What we found</h2>
+      <div class="take">
+        <div class="card take-col"><h3>What the results show</h3><ul id="take-yes"></ul></div>
+        <div class="card take-col"><h3>What they do not show</h3><ul id="take-no"></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REPRODUCE -->
+  <section class="view" id="view-reproduce" role="tabpanel" aria-labelledby="tab-reproduce" hidden>
+    <div class="hero">
+      <h1>Reproduce the results</h1>
+      <p class="lead">Start by rebuilding Table I and Fig. 4 from the committed run files. That needs no GPU and no data download. Move on to a full re-run when you also want to check the training.</p>
+    </div>
+
+    <div class="tracks" role="group" aria-label="Choose a track">
+      <button class="track-btn" type="button" data-track="a" aria-pressed="true"><b>Rebuild the tables</b><span>Table I, bootstrap intervals and Fig. 4 from the committed files.</span><em class="pill">No GPU, no download</em></button>
+      <button class="track-btn" type="button" data-track="b" aria-pressed="false"><b>Re-run the experiments</b><span>Build the clients, train every run and compare with the paper.</span><em class="pill">Needs a GPU</em></button>
+      <button class="track-btn" type="button" data-track="c" aria-pressed="false"><b>Add more seeds</b><span>Repeat runs to get uncertainty estimates across seeds.</span><em class="pill">Needs a GPU</em></button>
+    </div>
+
+    <div class="section">
+      <h2 id="steps-title"></h2>
+      <p class="sub" id="steps-sub"></p>
+      <ol class="steps" id="steps"></ol>
+    </div>
+
+    <div class="section">
+      <h2>Where each part of the paper lives</h2>
+      <p class="sub">Paths link to the repository. Each run folder in <span class="mono">results/paper/&lt;experiment&gt;/s&lt;seed&gt;/</span> holds the results, per-event decisions, manifest, training curve and per-turbine thresholds.</p>
+      <div class="card table-scroll"><table class="map" id="map"></table></div>
+    </div>
+
+    <div class="section">
+      <h2>Before you compare numbers</h2>
+      <div class="notes" id="notes"></div>
+    </div>
+
+    <div class="section">
+      <h2>Troubleshooting</h2>
+      <div class="faq" id="faq"></div>
+    </div>
+
+    <div class="section">
+      <h2>Cite</h2>
+      <p class="sub">Citation metadata is in <a href="https://github.com/PranavMundhra/Wind-Turbine/blob/main/CITATION.cff" target="_blank" rel="noopener">CITATION.cff</a>. Please also cite the dataset: Gück and Roelofs, <i>Wind turbine SCADA data for early fault detection</i>, Zenodo, version 6, <a href="https://doi.org/10.5281/zenodo.15846963" target="_blank" rel="noopener">doi:10.5281/zenodo.15846963</a>, and <a href="https://doi.org/10.3390/data9120138" target="_blank" rel="noopener">doi:10.3390/data9120138</a>.</p>
+    </div>
+  </section>
+
+  <footer id="foot"></footer>
+</main>
+
+<nav class="present-bar" id="present-bar" aria-label="Presentation controls" hidden>
+  <button type="button" class="ghost" id="pb-prev">Back</button>
+  <span class="dots" id="pb-dots"></span>
+  <button type="button" class="ghost" id="pb-next">Next</button>
+  <button type="button" class="ghost" id="pb-exit">Exit</button>
+</nav>
+
+<script src="data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
