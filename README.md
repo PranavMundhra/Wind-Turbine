@@ -122,7 +122,7 @@ tests/              pytest; the training tests run on CPU with tiny synthetic da
 ```
 
 The project history, including the earlier arms A–C, Kaggle notebooks and planning documents, is kept
-at the git tag `pre-paper-cleanup`; the exact code of the seed-42 runs is at tag `paper-runs-seed42`.
+in commit `33e11e6` (tag it `pre-paper-cleanup` if you like); the exact code of the seed-42 runs is commit `73ffab0`.
 
 ## Citation
 

@@ -13,5 +13,5 @@ and every event's prediction rows tested against them:
 **40,216 of 158,528 prediction rows (25.4%)** were present in the pooled training
 data, across 27 of 58 events. This is the "approximately one quarter" quoted in
 Section III of the paper. It was recorded from notebook output of that experiment
-(see `docs/MODEL_DOCUMENTATION.md` at tag `pre-paper-cleanup`); the per-turbine
+(see `docs/MODEL_DOCUMENTATION.md` in commit `33e11e6`); the per-turbine
 client export used by every paper run removes all such rows before training.
