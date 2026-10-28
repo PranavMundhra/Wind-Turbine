@@ -36,3 +36,11 @@ def test_data_covers_every_experiment_and_event():
         assert set(row["detected_events"]) <= event_ids, exp
         if exp != data["meta"]["reference"]:
             assert row["ci"] is not None, f"{exp} has no interval against the reference"
+
+
+def test_page_only_references_files_that_exist():
+    html = (SITE / "index.html").read_text(encoding="utf-8")
+    local = re.findall(r'(?:src|href)="((?!https?:|data:|#)[^"]+)"', html)
+    assert {"data.js", "assets/story.js", "assets/app.js", "assets/style.css"} <= set(local)
+    for ref in local:
+        assert (SITE / ref).is_file(), f"site/index.html references missing file {ref}"

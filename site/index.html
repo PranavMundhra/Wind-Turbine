@@ -45,23 +45,29 @@
       <div class="tiles" id="tiles"></div>
     </div>
 
-    <div class="section slide" id="s-idea">
-      <h2>How it works</h2>
-      <div class="card idea">
-        <svg viewBox="0 0 340 170" role="img" aria-label="Turbines send model weights to a server, which sends the average back">
-          <g class="dg-node">
-            <circle cx="32" cy="24" r="9"/><circle cx="32" cy="58" r="9"/><circle cx="32" cy="92" r="9"/><circle cx="32" cy="126" r="9"/>
-          </g>
-          <text class="dg-note" x="32" y="154" text-anchor="middle" id="dg-turbines">turbines</text>
-          <path class="dg-line" d="M46 24 L196 64 M46 58 L196 74 M46 92 L196 86 M46 126 L196 96"/>
-          <rect class="dg-box" x="200" y="46" width="110" height="62" rx="12"/>
-          <text class="dg-text" x="255" y="74" text-anchor="middle">Server</text>
-          <text class="dg-note" x="255" y="92" text-anchor="middle">averages weights</text>
-          <text class="dg-note" x="120" y="22" text-anchor="middle">weights only</text>
-          <path class="dg-line" d="M255 112 L255 142 L60 142" stroke-dasharray="4 4"/>
-          <text class="dg-note" x="200" y="158" text-anchor="middle">new global model</text>
-        </svg>
-        <ul id="idea-list"></ul>
+    <div class="section slide" id="s-story">
+      <h2>The story, one experiment at a time</h2>
+      <div class="card story" id="story" tabindex="-1">
+        <div class="stage-wrap">
+          <svg class="stage" id="stage" viewBox="0 0 640 380" role="img" aria-label="Animated illustration of the current step"></svg>
+        </div>
+        <div class="narr" aria-live="polite">
+          <p class="kicker" id="st-kicker"></p>
+          <h3 id="st-title"></h3>
+          <div class="lines" id="st-text"></div>
+          <div class="ctl" id="st-control" hidden></div>
+          <div id="st-result"></div>
+        </div>
+        <div class="story-bar">
+          <div class="sctl">
+            <button type="button" class="ghost" id="st-prev">Back</button>
+            <button type="button" class="ghost" id="st-replay">Replay</button>
+            <button type="button" class="ghost" id="st-auto" aria-pressed="false">Auto-play</button>
+            <button type="button" class="ghost" id="st-next">Next</button>
+          </div>
+          <div class="sdots" id="st-dots" role="group" aria-label="Steps"></div>
+          <span class="sub" id="st-count"></span>
+        </div>
       </div>
     </div>
 
@@ -172,11 +178,13 @@
 <nav class="present-bar" id="present-bar" aria-label="Presentation controls" hidden>
   <button type="button" class="ghost" id="pb-prev">Back</button>
   <span class="dots" id="pb-dots"></span>
+  <button type="button" class="ghost" id="pb-replay" hidden>Replay</button>
   <button type="button" class="ghost" id="pb-next">Next</button>
   <button type="button" class="ghost" id="pb-exit">Exit</button>
 </nav>
 
 <script src="data.js"></script>
+<script src="assets/story.js"></script>
 <script src="assets/app.js"></script>
 </body>
 </html>
