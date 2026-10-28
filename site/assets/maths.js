@@ -109,7 +109,7 @@
 
     sec('m-counter', 2, 'From flags to an event decision',
       '<p>One flag is not an alarm. A counter <i>c<sub>t</sub></i> goes up by one for every flagged reading and down by one (never below zero) for every unflagged one. Readings taken while the turbine is not in normal operating status leave it unchanged.</p>' + F.counter +
-      '<p>An event counts as detected if the counter ever reaches <i>θ</i> = ' + THETA + '. Reaching it needs a sustained excess of flags, so isolated blips never trigger an event.</p>' + F.detected +
+      '<p>An event counts as detected if the counter ever reaches <i>θ</i> = ' + THETA + '. The benchmark paper sets it to 72, about 12 hours of consecutive flags at 10-minute resolution. Reaching it needs a sustained excess of flags, so isolated blips never trigger an event.</p>' + F.detected +
       '<p class="m-code">In the code: ' + link('src/windturbine/scoring/care.py', 'criticality() and event_detected()') + '</p>',
       '<div class="w-box"><p class="w-title">Which flag patterns trigger an event?</p><div class="seg" id="w2-presets" role="group" aria-label="Flag pattern"></div>' +
       '<svg id="w2-svg" class="m-svg" viewBox="0 0 520 250" role="img" aria-label="Flags and the running counter"></svg>' +
@@ -131,7 +131,7 @@
       '<p><b>Earliness</b> uses the same flags but weights the window: weight 1 through the first half, then falling in a straight line to 0 at the end. Raising the alarm early counts for more.</p>' + F.wgt + F.earl +
       '<p><b>Accuracy</b> looks at healthy events only: the share of readings left unflagged.</p>' + F.acc +
       '<p>Each score is then averaged over its events, every event weighing the same. Here <i>n<sub>f</sub></i> = ' + M.n_anomaly + ' fault events and <i>n<sub>h</sub></i> = ' + M.n_normal + ' healthy events.</p>' + F.mean +
-      '<p class="m-code">In the code: ' + link('src/windturbine/scoring/evaluation.py', 'evaluate_care()') + ' and ' + link('src/windturbine/scoring/care.py', 'earliness_ws()') + ' (as implemented in this repository).</p>',
+      '<p class="m-code">In the code: ' + link('src/windturbine/scoring/evaluation.py', 'evaluate_care()') + ' and ' + link('src/windturbine/scoring/care.py', 'earliness_ws()') + ' (the weight function of the benchmark paper).</p>',
       '<div class="w-box"><p class="w-title">Paint the flags and read off the scores</p><div class="seg" id="w4-presets" role="group" aria-label="Preset"></div>' +
       '<p class="w-lane">A fault event <span class="w-sub">— click or drag across readings to flag them</span></p><div class="w4-wts" id="w4-wts" aria-hidden="true"></div><div class="cells" id="w4-fault"></div>' +
       '<p class="w-lane">A healthy event</p><div class="cells" id="w4-healthy"></div><div class="w-out" id="w4-out"></div>' +
@@ -156,6 +156,18 @@
       '<p class="m-code">In the code: ' + link('src/windturbine/summary.py', 'bootstrap_difference()') + '</p>',
       '<div class="w-box"><p class="w-title">One resample of the turbines</p><div class="turb-grid" id="w6-grid"></div><div class="w-row"><button type="button" class="ghost" id="w6-draw">Draw a resample</button></div><p class="w-out" id="w6-out"></p>' +
       '<hr class="w-hr"><p class="w-title">The published result</p><div class="field"><label for="w6-exp">Experiment compared with local training</label><select id="w6-exp"></select></div><div class="w-out" id="w6-ci"></div></div>');
+
+
+  /* ---------- how this matches the benchmark ---------- */
+  $('m-sections').insertAdjacentHTML('beforeend',
+    '<section class="card m-sec" id="m-bench"><div class="m-head"><span class="m-n">\u2248</span><h2>How this matches the benchmark</h2></div><div class="m-text">' +
+    '<p>The definitions follow the CARE to Compare paper (G\u00fcck, Roelofs and Faulstich, <i>Data</i> 2024, <a href="https://arxiv.org/abs/2404.10320" target="_blank" rel="noopener">arXiv:2404.10320</a>), and the committed code implements them:</p>' +
+    '<ul class="m-list"><li>Coverage and Reliability are F-scores with \u03b2 = ' + BETA + ', which weights precision more than recall.</li>' +
+    '<li>Earliness gives detections in the first half of the event window weight 1, then lets the weight fall linearly to 0.</li>' +
+    '<li>Accuracy is measured on healthy events only, over readings with a normal status. Readings with an abnormal status are ignored.</li>' +
+    '<li>The counter threshold is ' + THETA + ', about 12 hours of consecutive detections at 10-minute resolution.</li>' +
+    '<li>The four scores are combined with weights ' + W.join(', ') + '. CARE is 0 when no event is detected, and equals Accuracy when Accuracy is below 0.5.</li></ul>' +
+    '<p class="m-code">The code is in ' + link('src/windturbine/scoring/', 'src/windturbine/scoring/') + '.</p></div></section>');
 
   /* ---------- widget 1: threshold ---------- */
   (function () {

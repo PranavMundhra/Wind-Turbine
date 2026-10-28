@@ -12,8 +12,11 @@ The paper gives a federated baseline on Wind Farm C of the public
 of the same turbine, so every client dataset here excludes any training row that also appears in a
 prediction window.
 
-**Main result (seed 42):** no federated setting scored higher than local training (CARE 0.640). FedAvg
-and FedProx with μ ≤ 0.1 were within 0.008 of it; stronger proximal regularisation scored lower.
+**Main result (mean of five seeds):** federated learning scored about the same as local training. Local
+training averaged CARE 0.627 ± 0.004; FedAvg averaged 0.634 ± 0.007 and the corrected centralised comparator
+0.635 ± 0.013, but no 95% turbine-bootstrap interval for a difference from local training excludes zero
+(FedAvg +0.007, interval −0.031 to +0.043). FedPer was lower (0.611 ± 0.019). In the rows that have only seed 42,
+stronger proximal regularisation (μ ≥ 1) and any privacy noise scored lower.
 
 **Interactive demo and reproduction guide:** <https://pranavmundhra.github.io/Wind-Turbine/> (source in [`site/`](site/)).
 
@@ -24,7 +27,7 @@ and FedProx with μ ≤ 0.1 were within 0.008 of it; stronger proximal regularis
 - [Reproducing the paper](#reproducing-the-paper)
 - [Multi-seed runs](#multi-seed-runs)
 - [Where each part of the paper lives](#where-each-part-of-the-paper-lives)
-- [Notes on the seed-42 results](#notes-on-the-seed-42-results)
+- [Notes on the results](#notes-on-the-results)
 - [Citation and licence](#citation-and-licence)
 
 ## Quick start
@@ -48,22 +51,24 @@ be read on GitHub without running anything.
 
 ## Results
 
-Seed 42, 58 events (27 with an anomaly, 31 normal). Higher is better for every score.
+58 events (27 with an anomaly, 31 normal). Rows with five seeds (42–46) show mean ± SD over seeds; the other rows
+are seed 42 only. Higher is better for every score.
 
-| Approach | Experiment | CARE | Coverage | Earliness | Reliability | Accuracy | Detected / 27 | False alarms / 31 |
-|---|---|---|---|---|---|---|---|---|
-| Local training (D) | `D` | 0.640 | 0.369 | 0.295 | 0.654 | 0.941 | 14 | 6 |
-| Centralised comparator¹ | `central_sequential` | 0.640 | 0.316 | 0.244 | 0.723 | 0.960 | 12 | 2 |
-| FedAvg (F1) | `F1` | 0.636 | 0.353 | 0.294 | 0.654 | 0.940 | 14 | 6 |
-| Personalised (F2) | `F2` | 0.625 | 0.296 | 0.251 | 0.663 | 0.958 | 11 | 3 |
-| FedProx (F3), μ = 0 | `F3_mu0` | 0.636 | 0.347 | 0.287 | 0.657 | 0.945 | 13 | 5 |
-| FedProx (F3), μ = 0.001 | `F3_mu0.001` | 0.632 | 0.337 | 0.299 | 0.657 | 0.933 | 13 | 5 |
-| FedProx (F3), μ = 0.01 | `F3_mu0.01` | 0.636 | 0.351 | 0.309 | 0.654 | 0.933 | 14 | 6 |
-| FedProx (F3), μ = 0.1 | `F3_mu0.1` | 0.639 | 0.354 | 0.292 | 0.657 | 0.945 | 13 | 5 |
-| FedProx (F3), μ = 1 | `F3_mu1` | 0.616 | 0.266 | 0.188 | 0.667 | 0.979 | 10 | 2 |
-| FedProx (F3), μ = 10 | `F3_mu10` | 0.590 | 0.240 | 0.146 | 0.604 | 0.980 | 11 | 5 |
+| Approach | Experiment | Seeds | CARE | Coverage | Earliness | Reliability | Accuracy | Detected / 27 | False alarms / 31 |
+|---|---|---|---|---|---|---|---|---|---|
+| Local training (D) | `D` | 5 | 0.627 ± 0.004 | 0.372 ± 0.009 | 0.295 ± 0.008 | 0.597 ± 0.019 | 0.936 ± 0.008 | 14.2 ± 0.8 | 8.8 ± 0.8 |
+| Centralised comparator (corrected) | `central` | 5 | 0.635 ± 0.013 | 0.327 ± 0.028 | 0.254 ± 0.040 | 0.680 ± 0.037 | 0.958 ± 0.010 | 12.6 ± 1.7 | 3.8 ± 1.3 |
+| Centralised comparator, as in the paper¹ | `central_sequential` | 1 | 0.640 | 0.316 | 0.244 | 0.723 | 0.960 | 12.0 | 2.0 |
+| FedAvg (F1) | `F1` | 5 | 0.634 ± 0.007 | 0.344 ± 0.010 | 0.298 ± 0.004 | 0.650 ± 0.020 | 0.939 ± 0.005 | 13.8 ± 0.4 | 6.0 ± 0.7 |
+| Personalised (F2) | `F2` | 5 | 0.611 ± 0.019 | 0.285 ± 0.024 | 0.230 ± 0.027 | 0.609 ± 0.060 | 0.966 ± 0.011 | 10.4 ± 1.5 | 4.2 ± 1.6 |
+| FedProx (F3), μ = 0 | `F3_mu0` | 1 | 0.636 | 0.347 | 0.287 | 0.657 | 0.945 | 13.0 | 5.0 |
+| FedProx (F3), μ = 0.001 | `F3_mu0.001` | 1 | 0.632 | 0.337 | 0.299 | 0.657 | 0.933 | 13.0 | 5.0 |
+| FedProx (F3), μ = 0.01 | `F3_mu0.01` | 1 | 0.636 | 0.351 | 0.309 | 0.654 | 0.933 | 14.0 | 6.0 |
+| FedProx (F3), μ = 0.1 | `F3_mu0.1` | 5 | 0.631 ± 0.007 | 0.351 ± 0.008 | 0.291 ± 0.004 | 0.626 ± 0.021 | 0.943 ± 0.002 | 12.6 ± 0.5 | 5.8 ± 0.4 |
+| FedProx (F3), μ = 1 | `F3_mu1` | 1 | 0.616 | 0.266 | 0.188 | 0.667 | 0.979 | 10.0 | 2.0 |
+| FedProx (F3), μ = 10 | `F3_mu10` | 1 | 0.590 | 0.240 | 0.146 | 0.604 | 0.980 | 11.0 | 5.0 |
 
-¹ The comparator as run for the paper; see [Notes](#notes-on-the-seed-42-results). Use `central` for new runs.
+¹ The comparator as run for the paper (one seed); see [Notes](#notes-on-the-results). Use `central` for new runs.
 
 **Exploratory private variant (F4).** F2 with simulated secure aggregation and record-level DP-SGD
 (clip norm 1, δ = 10⁻⁶, RDP accountant). With noise, the models barely trained, so these rows give no
@@ -77,9 +82,11 @@ usable relation between privacy and CARE.
 | 2 | `F4_sigma2` | 0.596 | 1.05 |
 | 4 | `F4_sigma4` | 0.596 | 0.47 |
 
-**Uncertainty.** These are single-seed results. `bootstrap_vs_D.csv` gives a 95% interval for each
-CARE difference from D, resampling turbines rather than events (the 58 events come from 22 turbines,
-so events of one turbine are not independent). At seed 42 every interval contains zero.
+**Uncertainty.** `bootstrap_vs_D.csv` gives a 95% interval for each CARE difference from D, resampling turbines
+rather than events (the 58 events come from 22 turbines, so events of one turbine are not independent). Each
+experiment is averaged over its seeds before the difference from D is taken. Every one of the 15 intervals contains zero, so no ranking is established. Rows that have only seed 42 are compared with
+the five-seed mean of D and should be read as indicative. For how CARE itself is computed, see the
+[CARE maths](https://pranavmundhra.github.io/Wind-Turbine/#maths) page.
 
 ## Reproducing the paper
 
@@ -164,6 +171,7 @@ python -m windturbine run all --seeds 43 44 45 46 --clients /path/to/clients --j
 python -m windturbine summarise --runs results/runs --out results/paper
 ```
 
+The committed results already include seeds 42–46 for D, central, F1, F2 and F3_mu0.1.
 With several seeds, `table_I.md` reports mean ± SD per experiment, and `bootstrap_vs_D.csv` averages
 each experiment over its seeds before taking the difference from D.
 
@@ -182,7 +190,7 @@ roughly 7 hours of wall time with `--jobs 3`; the priority subset is roughly 2 h
 | Local training (D) | `src/windturbine/local.py` | `configs/paper/D.yaml` |
 | FedAvg (F1), centralised comparator | `src/windturbine/federated/fedavg.py` | `configs/paper/F1.yaml`, `central.yaml` |
 | FedPer (F2), FedProx (F3), private (F4) | `src/windturbine/federated/strategies.py` | `configs/paper/F2.yaml`, `F3_mu*.yaml`, `F4_sigma*.yaml` |
-| CARE score and thresholds | `src/windturbine/scoring/` | – |
+| CARE score and thresholds | `src/windturbine/scoring/` | [CARE maths](https://pranavmundhra.github.io/Wind-Turbine/#maths) |
 | Table I, bootstrap, Fig. 4 | `src/windturbine/summary.py`, `notebooks/reproduce.ipynb` | `results/paper/` |
 | Command line | `src/windturbine/__main__.py`, `experiments.py` | – |
 
@@ -191,20 +199,22 @@ components), `per_event.csv` (decision and scores per event), `manifest.json` (f
 package versions, runtime), the training curve (`rounds.csv` or `epochs.csv`) and the per-turbine
 thresholds. F4 runs add `privacy.json`.
 
-## Notes on the seed-42 results
+## Notes on the results
 
-- **D and F1–F4 were trained in different environments.** D was trained on Kaggle with TensorFlow, on
-  client export `bb2ed3ff…`; its `results.json` and `per_event.csv` were copied from notebook output at
-  six decimals (`results/paper/D/s42/evidence.json`). F1–F4 were trained on an RTX 5070 Ti with Keras 3 on
-  PyTorch, on a local rebuild of the export (`1a43906d…`) with identical per-turbine row counts. New D runs
-  use the same PyTorch training step as F1–F4, so the multi-seed results do not have this difference.
+- **Local training was rerun at every seed.** D was first run on Kaggle with TensorFlow, on client export
+  `bb2ed3ff…` (CARE 0.640 at seed 42; the notebook output is kept in `results/paper/D/s42/evidence.json`). Table I
+  now uses reruns of D at seeds 42–46 with the same PyTorch training step as the federated runs, on a local rebuild
+  of the export (`1a43906d…`, identical per-turbine row counts). Seed 42 alone gives 0.632 with that step. The
+  federated runs were trained on an RTX 5070 Ti with Keras 3 on PyTorch.
 - **The paper's centralised comparator drifted.** In `central_sequential`, each epoch trains on one turbine
   at a time in random order, so the model moves toward the last turbine of the epoch. Its validation error
   was lowest at epoch 2 (MSE 0.50) and rose to 0.91 by epoch 100, against about 0.41 for FedAvg.
   `central` shuffles minibatches across all turbines and is the comparator to use from now on.
+- **Only five rows have five seeds.** D, `central`, F1, F2 and F3_mu0.1 do; the rest of the FedProx sweep and the
+  privacy runs are seed 42 only.
 
 The earlier project history (arms A–C, Kaggle notebooks, planning documents) is in commit `33e11e6`, and
-the exact code of the seed-42 runs is commit `73ffab0`.
+the exact code of the first seed-42 runs is commit `73ffab0`.
 
 ## Citation and licence
 
