@@ -44,10 +44,14 @@ def test_committed_runs_rebuild_table_i():
     from windturbine.summary import find_runs, seed_table
 
     table = seed_table(find_runs(REPO / "results/paper"))
-    paper = {"D": 0.640, "central_sequential": 0.640, "F1": 0.636, "F2": 0.625, "F3_mu0": 0.636,
-             "F3_mu0.001": 0.632, "F3_mu0.01": 0.636, "F3_mu0.1": 0.639, "F3_mu1": 0.616, "F3_mu10": 0.590}
+    # CARE averaged over the committed seeds (mean over seeds 42-46 for the five main rows, seed 42 for the rest)
+    paper = {"D": 0.627, "central": 0.635, "central_sequential": 0.640, "F1": 0.634, "F2": 0.611, "F3_mu0": 0.636,
+             "F3_mu0.001": 0.632, "F3_mu0.01": 0.636, "F3_mu0.1": 0.631, "F3_mu1": 0.616, "F3_mu10": 0.590}
     for name, care in paper.items():
         assert round(table.loc[name, "care_mean"], 3) == care, name
+    five_seeds = {"D", "central", "F1", "F2", "F3_mu0.1"}
+    for name in table.index:
+        assert table.loc[name, "n_seeds"] == (5 if name in five_seeds else 1), name
 
 
 def test_fast_bootstrap_matches_reference_care():
