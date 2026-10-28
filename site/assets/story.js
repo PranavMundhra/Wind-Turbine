@@ -175,34 +175,48 @@
       txt(320, 40, 'Noise hides each turbine\u2019s private data', 'head sm', 'middle');
   }
   function s11() {
-    var ids = [REF, 'central_sequential', 'F1', 'F2', bestMu(), 'F4_sigma1'], lo = 0.5, hi = 0.66, w = 330, x0 = 250, h = '', refX;
-    var names = { central_sequential: 'Centralised', F1: 'FedAvg', F2: 'FedPer', F4_sigma1: 'With privacy noise' };
-    names[REF] = 'Local training'; names[bestMu()] = 'FedProx, best μ';
-    refX = x0 + (X[REF].metrics.care - lo) / (hi - lo) * w;
+    var ids = [REF, 'central', 'F1', 'F2', bestMu(), 'F4_sigma1'], lo = 0.5, hi = 0.66, w = 330, x0 = 250, h = '', refX;
+    var names = { central: 'Centralised', F1: 'FedAvg', F2: 'FedPer', F4_sigma1: 'With privacy noise' };
+    names[REF] = 'Local training'; names[bestMu()] = 'FedProx, \u03bc ' + X[bestMu()].label.replace(/^[^=]*= /, '');
+    function bx(v) { return x0 + (v - lo) / (hi - lo) * w; }
+    refX = bx(X[REF].metrics.care);
     ids.forEach(function (id, i) {
-      var v = X[id].metrics.care, y = 64 + i * 42, bw = (v - lo) / (hi - lo) * w;
+      var v = X[id].metrics.care, y = 64 + i * 42, bw = bx(v) - x0, ticks = '';
+      if (X[id].seeds.length > 1) {
+        ticks = X[id].per_seed.map(function (q) { return '<line class="seed-tick" x1="' + bx(q.care).toFixed(1) + '" x2="' + bx(q.care).toFixed(1) + '" y1="' + (y + 4) + '" y2="' + (y + 20) + '"/>'; }).join('');
+      }
       h += txt(x0 - 12, y + 16, names[id], 'lane', 'end') +
         '<rect class="bar-bg" x="' + x0 + '" y="' + y + '" width="' + w + '" height="24" rx="6"/>' +
         '<rect class="bar-fg ' + (id === REF ? 'ref' : id === 'F4_sigma1' ? 'priv' : '') + '" style="animation-delay:' + (i * 0.25) + 's" x="' + x0 + '" y="' + y + '" width="' + bw.toFixed(1) + '" height="24" rx="6"/>' +
-        txt(x0 + bw + 8, y + 17, f3(v), 'bar-val');
+        '<g class="appear a4">' + ticks + '</g>' + txt(x0 + bw + 8, y + 17, f3(v), 'bar-val');
     });
     return h + '<line class="ref-line" x1="' + refX.toFixed(1) + '" y1="52" x2="' + refX.toFixed(1) + '" y2="318"/>' +
       txt(refX.toFixed(1), 340, 'local training', 'note', 'middle') + txt(x0, 366, 'Bars start at 0.50, not zero', 'note');
   }
-  function bestMu() { return G.mu.slice().sort(function (a, b) { return X[b].metrics.care - X[a].metrics.care; })[0]; }
+  function bestMu() { return G.mu.slice().sort(function (a, b) { return X[b].seeds.length - X[a].seeds.length || X[b].metrics.care - X[a].metrics.care; })[0]; }
 
   /* ---------- narration ---------- */
+  var FED = ['F1', 'F2'].concat(G.mu, G.priv);
+  var nSeeds = Math.max.apply(null, Object.keys(X).map(function (id) { return X[id].seeds.length; }));
+  var MAIN = Object.keys(X).filter(function (id) { return X[id].seeds.length === nSeeds; });
   var refCare = X[REF].metrics.care;
-  var maxFed = Math.max.apply(null, [].concat(G.mu, G.priv, ['F1', 'F2']).map(function (id) { return X[id].metrics.care; }));
+  var fedMain = FED.filter(function (id) { return MAIN.indexOf(id) >= 0; });
+  var bestFed = (fedMain.length ? fedMain : FED).slice().sort(function (a, b) { return X[b].metrics.care - X[a].metrics.care; })[0];
+  var maxFed = X[bestFed].metrics.care;
   var noBeat = maxFed <= refCare;
+  var withCi = Object.keys(X).filter(function (id) { return X[id].ci; });
+  var excl = withCi.filter(function (id) { return X[id].ci.excludes_zero; }).length;
+  function nTxt(v) { return Math.abs(v - Math.round(v)) < 1e-9 ? String(Math.round(v)) : v.toFixed(1); }
 
   function result(id, extra) {
-    var e = X[id], ci = e.ci;
+    var e = X[id], ci = e.ci, n = e.seeds.length;
+    var spread = e.sd && e.sd.care !== null ? '<span class="res-sd">\u00b1 ' + f3(e.sd.care) + '</span>' : '';
     var delta = id === REF ? 'The bar every other approach has to beat.'
-      : sgn(ci.diff) + ' vs local training · ' + (ci.excludes_zero ? 'differs from local' : 'not distinguishable from local');
-    return '<div class="res"><div class="res-top"><span class="res-k">CARE</span><b class="res-n" data-to="' + e.metrics.care + '">' + f3(e.metrics.care) + '</b></div>' +
-      '<div class="res-line">' + e.detected + ' of ' + M.n_anomaly + ' faults found · ' + e.false_alarms + ' of ' + M.n_normal + ' false alarms</div>' +
-      '<div class="res-line muted">' + esc(delta) + '</div>' + (extra ? '<div class="res-line muted">' + extra + '</div>' : '') + '</div>';
+      : sgn(ci.diff) + ' vs local training \u00b7 ' + (ci.excludes_zero ? 'differs from local' : 'not distinguishable from local');
+    var seeds = n > 1 ? 'Mean of ' + n + ' seeds' : 'Seed ' + e.seeds[0] + ' only';
+    return '<div class="res"><div class="res-top"><span class="res-k">CARE</span><b class="res-n" data-to="' + e.metrics.care + '">' + f3(e.metrics.care) + '</b>' + spread + '</div>' +
+      '<div class="res-line">' + nTxt(e.detected) + ' of ' + M.n_anomaly + ' faults found \u00b7 ' + nTxt(e.false_alarms) + ' of ' + M.n_normal + ' false alarms' + (n > 1 ? ' (average)' : '') + '</div>' +
+      '<div class="res-line muted">' + esc(delta) + '</div><div class="res-line muted">' + esc(seeds) + (extra ? ' \u00b7 ' + extra : '') + '</div></div>';
   }
   function plain(t) { return '<div class="res"><div class="res-line">' + esc(t) + '</div></div>'; }
   function key(items) {
@@ -233,7 +247,7 @@
     { kicker: 'Approach 2 · Centralised', title: 'Everything in one place', svg: s6,
       text: ['All the raw data is collected in one place and a single model learns from all of it.',
         'It can work well, but every turbine has to hand over its data.'],
-      res: function () { return result('central_sequential', 'In the paper this comparator trained one turbine at a time and drifted, so treat it as a rough reference.'); } },
+      res: function () { return result('central'); } },
     { kicker: 'Approach 3 · FedAvg', title: 'Share the lessons, not the data', svg: s7, after: roundCounter,
       text: ['Each turbine trains briefly on its own data and sends what it learned to a server. The server averages the lessons and sends the result back. Then everyone repeats.',
         'Only what the models learned travels. The readings never leave the turbine.'],
@@ -250,8 +264,12 @@
     { kicker: 'The result', title: 'Putting it together', svg: s11,
       text: noBeat
         ? ['No federated approach scored higher than the turbines training alone.', 'Federated learning came close without any turbine handing over raw data. Heavy privacy noise and a very tight leash cost the most.']
-        : ['The best federated result was ' + f3(maxFed) + ' against ' + f3(refCare) + ' for local training.'],
-      res: function () { return plain((M.n_events === 58 ? 'One seed, ' : '') + M.n_events + ' events, ' + M.n_turbines + ' turbines. Differences this small are not reliable on their own.'); } }
+        : excl === 0
+          ? ['Federated averaging scored about the same as the turbines training alone: ' + f3(X.F1.metrics.care) + ' against ' + f3(refCare) + ' on average over ' + X.F1.seeds.length + ' seeds. Its 95% interval (' + sgn(X.F1.ci.lo) + ' to ' + sgn(X.F1.ci.hi) + ') includes zero.',
+            'So the data do not show that sharing helps, or that it hurts, and no turbine had to hand over raw data. Heavy privacy noise and a very tight leash cost the most.']
+          : ['The best federated result was ' + f3(maxFed) + ' against ' + f3(refCare) + ' for local training.'],
+      extra: '<ul class="key"><li><i class="k-d"></i><span>Ticks on a bar are individual seeds. A bar without ticks is seed ' + X[REF].seeds[0] + ' only.</span></li></ul>',
+      res: function () { return plain(nSeeds + ' seeds on the main rows, ' + M.n_events + ' events, ' + M.n_turbines + ' turbines. Differences this small are not reliable on their own.'); } }
   ];
 
   /* ---------- player ---------- */
