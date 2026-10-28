@@ -309,6 +309,7 @@
       el('tab-' + v).setAttribute('aria-selected', v === view);
     });
     el('present-btn').hidden = view !== 'present';
+    if (view === 'present' && window.WT_STORY) window.WT_STORY.relayout();
   }
   [].forEach.call(document.querySelectorAll('.tab'), function (b) {
     b.addEventListener('click', function () { location.hash = b.dataset.view; });
@@ -353,6 +354,7 @@
     document.documentElement.classList.add('presenting');
     el('present-bar').hidden = false;
     applySlide();
+    window.WT_STORY.relayout();
     var r = document.documentElement.requestFullscreen;
     if (r) {
       try { Promise.resolve(r.call(document.documentElement)).then(function () { pres.fs = true; }, function () { /* stay in page */ }); } catch (e) { /* stay in page */ }
@@ -363,6 +365,7 @@
     pres.on = false;
     document.documentElement.classList.remove('presenting');
     el('present-bar').hidden = true;
+    window.WT_STORY.relayout();
     [].forEach.call(document.querySelectorAll('.slide'), function (n) { n.classList.remove('active'); });
     if (pres.fs && document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) { /* ignore */ } }
     pres.fs = false;

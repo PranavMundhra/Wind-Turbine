@@ -59,7 +59,7 @@
     });
     h += '<g transform="translate(290,160)"><g class="pop"><circle r="15" class="warn-dot"/>' + txt(0, 7, '!', 'bang', 'middle') + '</g></g>';
     h += txt(320, 52, 'One wind farm, ' + M.n_turbines + ' turbines', 'head', 'middle');
-    h += txt(320, 78, 'Each one streams sensor readings all day', 'note', 'middle');
+    h += txt(320, 78, 'Each one streams sensor readings all day', 'note opt', 'middle');
     return h;
   }
   function s2() {
@@ -83,13 +83,13 @@
       txt(ax + 32, (ay - 20).toFixed(0), 'Alarm', 'alarm') +
       '<g transform="translate(200,40)"><line class="ln sense" x1="0" y1="0" x2="26" y2="0"/>' + txt(34, 5, 'What the sensors say', 'note') + '</g>' +
       '<g transform="translate(200,64)"><line class="ln expect" x1="0" y1="0" x2="26" y2="0"/>' + txt(34, 5, 'What the model expects when healthy', 'note') + '</g>' +
-      txt(88, 362, 'one turbine', 'note', 'middle');
+      txt(88, 362, 'one turbine', 'note opt', 'middle');
   }
   function s3() {
     return '<line class="axis" x1="60" y1="140" x2="600" y2="140"/><line class="axis" x1="60" y1="310" x2="600" y2="310"/>' +
       txt(60, 52, 'A turbine with a fault', 'lane') + txt(60, 252, 'A healthy turbine', 'lane') +
       '<rect class="fault-zone" x="380" y="66" width="190" height="112" rx="10"/>' + txt(475, 88, 'fault period', 'note', 'middle') +
-      '<g class="appear a1"><path class="flag good" d="M350 140 L350 100 L376 108 L350 116"/></g>' + txt(322, 168, 'early alarm', 'note', 'middle') +
+      '<g class="appear a1"><path class="flag good" d="M350 140 L350 100 L376 108 L350 116"/></g>' + txt(304, 168, 'early alarm', 'note', 'middle') +
       '<rect class="cover" x="396" y="150" width="130" height="12" rx="6"/>' + txt(461, 200, 'fault flagged', 'note', 'middle') +
       '<g class="appear a3"><path class="flag" d="M250 310 L250 272 L276 280 L250 288"/></g>' + txt(250, 340, 'false alarm', 'note', 'middle') +
       '<g class="quiet">' + [330, 380, 430, 480, 530].map(function (x) { return '<circle cx="' + x + '" cy="310" r="4"/>'; }).join('') + '</g>' +
@@ -97,7 +97,7 @@
   }
   function s4() {
     var h = '', i, size = 18, gap = 6, x0 = 56, over = [3, 4, 11, 12, 19];
-    h += txt(x0, 66, 'Rows the model learns from', 'lane') + txt(x0, 240, 'Rows we test it on (the fault events)', 'lane');
+    h += txt(x0, 66, 'Rows the model learns from', 'lane') + txt(x0, 248, 'Rows we test it on (the fault events)', 'lane');
     for (i = 0; i < 24; i++) {
       var x = x0 + i * (size + gap), o = over.indexOf(i) >= 0;
       h += '<rect class="sq train' + (o ? ' dup' : '') + '" x="' + x + '" y="84" width="' + size + '" height="' + size + '" rx="4"/>';
@@ -116,7 +116,7 @@
         '<rect class="track" x="' + (x - 27) + '" y="212" width="54" height="7" rx="3.5"/>' +
         '<rect class="fill" style="animation-delay:' + (i * 0.6) + 's" x="' + (x - 27) + '" y="212" width="54" height="7" rx="3.5"/>';
     });
-    return h + txt(320, 46, 'Every turbine learns on its own', 'head', 'middle') + txt(320, 72, 'its own readings stay inside its bubble', 'note', 'middle');
+    return h + txt(320, 46, 'Every turbine learns on its own', 'head', 'middle') + txt(320, 72, 'its own readings stay inside its bubble', 'note opt', 'middle');
   }
   function s6() {
     var h = ground(), i, d;
@@ -124,7 +124,7 @@
       h += '<path class="link" d="M' + x + ' 222 L320 156"/>' + turbine(x, 330, 1.4, 'sp' + (i2 % 3));
       for (i = 0; i < 3; i++) { d = i * 0.7 + i2 * 0.18; h += pkt(x, 222, 320 - x, -66, 'up2', d, 'data'); }
     });
-    return h + learner(320, 108, 2.2, 'plain', 'merge slow') + txt(320, 178, 'one model for everyone', 'note', 'middle') +
+    return h + learner(320, 108, 2.2, 'plain', 'merge slow') + txt(320, 178, 'one model for everyone', 'note opt', 'middle') +
       txt(320, 40, 'All the raw data is sent to one place', 'head', 'middle');
   }
   function cycle(split) {
@@ -137,14 +137,14 @@
         pkt(320, 80, x - 320, 108, 'down', i * 0.1, 'shared');
     });
     return h + learner(320, 80, 1.6, 'plain', 'merge') +
-      txt(320, 134, split ? 'averages the shared part only' : 'the server averages the lessons', 'note', 'middle') +
+      txt(320, 134, split ? 'averages the shared part only' : 'the server averages the lessons', 'note opt', 'middle') +
       '<text id="rnd" class="note" x="30" y="40">Round 1</text>';
   }
   function s7() { return cycle(false); }
   function s8() {
     return cycle(true) +
-      '<g transform="translate(400,40)"><rect class="part-shared" x="0" y="-9" width="14" height="14" rx="4"/>' + txt(22, 3, 'shared part, averaged', 'note') + '</g>' +
-      '<g transform="translate(400,64)"><rect class="part-own" x="0" y="-9" width="14" height="14" rx="4"/>' + txt(22, 3, 'personal part, stays home', 'note') + '</g>';
+      '<g transform="translate(150,360)"><rect class="part-shared" x="0" y="-12" width="16" height="16" rx="5"/>' + txt(24, 1, 'shared part', 'note') + '</g>' +
+      '<g transform="translate(360,360)"><rect class="part-own" x="0" y="-12" width="16" height="16" rx="5"/>' + txt(24, 1, 'personal part', 'note') + '</g>';
   }
   var MU_P = [0, 0.15, 0.3, 0.5, 0.8, 0.97];
   function s9() {
@@ -155,7 +155,7 @@
         '<g class="mv" data-i="' + i + '" data-x="' + x + '"><g transform="translate(' + x + ',188)"><g class="wander" style="--amp:12px;animation-delay:-' + i * 0.9 + 's">' +
         learner(0, 0, 0.9, 'plain') + '</g></g></g>';
     });
-    return h + learner(320, 92, 1.5, 'plain', 'merge slow') + txt(320, 140, 'the group model', 'note', 'middle') +
+    return h + learner(320, 92, 1.5, 'plain', 'merge slow') +
       txt(320, 40, 'A leash pulls each turbine toward the group', 'head sm', 'middle');
   }
   var SG_NOISE = [0, 0.45, 0.8, 1.2, 1.6];
@@ -171,7 +171,7 @@
         '<g transform="translate(' + x + ',212)"><g class="pkt up2 fz" style="--dx:' + (320 - x) + 'px;--dy:-106px;animation-delay:' + (i * 0.25) + 's">' + fuzz + '</g></g>' +
         pkt(x, 212, 320 - x, -106, 'up2', i * 0.25, 'shared');
     });
-    return h + '<g class="srv-priv">' + learner(320, 84, 1.5, 'plain') + '</g>' + txt(320, 134, 'the shared model', 'note', 'middle') +
+    return h + '<g class="srv-priv">' + learner(320, 84, 1.5, 'plain') + '</g>' + txt(320, 134, 'the shared model', 'note opt', 'middle') +
       txt(320, 40, 'Noise hides each turbine\u2019s private data', 'head sm', 'middle');
   }
   function s11() {
@@ -255,7 +255,7 @@
   ];
 
   /* ---------- player ---------- */
-  var story = { i: 0, mu: 3, sg: 2, timers: [], raf: 0, auto: false, autoT: 0 };
+  var story = { i: 0, mu: 3, sg: 2, timers: [], raf: 0, auto: false, autoT: 0, token: 0, shown: 0 };
   var stage = $('stage');
 
   function clearTimers() { story.timers.forEach(clearInterval); story.timers = []; if (story.raf) cancelAnimationFrame(story.raf); story.raf = 0; }
@@ -266,17 +266,21 @@
     story.timers.push(setInterval(function () { n += 1; node.textContent = 'Round ' + n; }, 6000));
   }
 
-  function countUp() {
-    var node = document.querySelector('#st-result .res-n');
-    if (!node) return;
-    var to = parseFloat(node.dataset.to);
+  /* The result card counts up from 0 when a scene opens and glides from the previous value when a slider moves. */
+  function setResult(html, fresh) {
+    var prev = fresh ? 0 : story.shown, node, to;
     if (story.raf) cancelAnimationFrame(story.raf);
-    if (reduce) { node.textContent = f3(to); return; }
-    var t0 = performance.now(), d = 900;
+    $('st-result').innerHTML = html;
+    node = document.querySelector('#st-result .res-n');
+    if (!node) return;
+    to = parseFloat(node.dataset.to);
+    if (reduce) { node.textContent = f3(to); story.shown = to; return; }
+    node.textContent = f3(prev);
+    var t0 = performance.now(), dur = fresh ? 900 : 380;
     function step(now) {
-      var p = Math.min(1, (now - t0) / d);
-      node.textContent = f3(to * (1 - Math.pow(1 - p, 3)));
-      if (p < 1) story.raf = requestAnimationFrame(step);
+      var p = Math.min(1, (now - t0) / dur), v = prev + (to - prev) * (1 - Math.pow(1 - p, 3));
+      node.textContent = f3(v); story.shown = v;
+      if (p < 1) story.raf = requestAnimationFrame(step); else story.shown = to;
     }
     story.raf = requestAnimationFrame(step);
   }
@@ -289,13 +293,12 @@
     return 'A tight leash. Every turbine is forced to copy the group, so local detail is lost and the score drops.';
   }
   function sgCaption(k) {
-    var id = G.priv[k], e = X[id];
-    if (e.epsilon === null) return 'No noise. Turbines share clean updates, protected only by secure aggregation.';
+    if (X[G.priv[k]].epsilon === null) return 'No noise. Turbines share clean updates, protected only by secure aggregation.';
     return 'More noise hides each turbine better, but the shared model gets blurrier and barely learns.';
   }
 
-  function applyControl(kind) {
-    var k, node = $('st-control'), cap = node.querySelector('.cap');
+  function applyControl(kind, fresh) {
+    var k, cap = $('st-control').querySelector('.cap');
     if (!cap) return;
     if (kind === 'mu') {
       k = story.mu;
@@ -312,8 +315,7 @@
       stage.style.setProperty('--blur', (SG_NOISE[k] * 2.4).toFixed(1) + 'px');
       cap.textContent = sgCaption(k);
     }
-    $('st-result').innerHTML = SCENES[story.i].res();
-    countUp();
+    setResult(SCENES[story.i].res(), fresh);
   }
 
   function buildControl(kind) {
@@ -325,35 +327,59 @@
       '<p class="cap"></p>';
     $('st-slider').addEventListener('input', function (e) {
       if (kind === 'mu') story.mu = +e.target.value; else story.sg = +e.target.value;
-      applyControl(kind);
+      applyControl(kind, false);
     });
   }
 
-  function show(i) {
-    var sc, node;
-    i = Math.max(0, Math.min(SCENES.length - 1, i));
-    story.i = i; sc = SCENES[i];
-    clearTimers();
-    stage.classList.add('swap');
-    setTimeout(function () {
-      stage.innerHTML = sc.svg();
-      stage.setAttribute('aria-label', sc.title);
-      stage.classList.remove('swap');
-      if (sc.ctl) applyControl(sc.ctl);
-      if (sc.after) sc.after();
-    }, reduce ? 0 : 160);
+  /* Caption, controls and result for scene i. The card keeps one height across scenes (see lockHeight). */
+  function fillNarr(i) {
+    var sc = SCENES[i], node = $('st-control');
     $('st-kicker').textContent = sc.kicker;
     $('st-title').textContent = sc.title;
     $('st-text').innerHTML = sc.text.map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + (sc.extra || '');
-    node = $('st-control');
     if (sc.ctl) buildControl(sc.ctl); else { node.hidden = true; node.innerHTML = ''; }
-    stage.style.removeProperty('--noise'); stage.style.removeProperty('--blur');
     $('st-result').innerHTML = sc.res();
-    countUp();
+  }
+
+  function lockHeight() {
+    var narr = document.querySelector('.narr'), max = 0, i;
+    narr.style.minHeight = '';
+    if (!narr.offsetWidth) return false;
+    for (i = 0; i < SCENES.length; i++) { fillNarr(i); max = Math.max(max, narr.offsetHeight); }
+    narr.style.minHeight = max + 'px';
+    return true;
+  }
+
+  function settle() {
+    var sc = SCENES[story.i];
+    fillNarr(story.i);
+    if (sc.ctl) applyControl(sc.ctl, false); else setResult(sc.res(), false);
+  }
+
+  function relayout() { if (lockHeight()) settle(); }
+
+  function show(i) {
+    var sc, my, n0;
+    i = Math.max(0, Math.min(SCENES.length - 1, i));
+    story.i = i; sc = SCENES[i];
+    clearTimers();
+    my = ++story.token;
+    stage.classList.add('swap');
+    fillNarr(i);
+    n0 = document.querySelector('#st-result .res-n');
+    if (n0 && !reduce) n0.textContent = f3(0);
+    stage.style.removeProperty('--noise'); stage.style.removeProperty('--blur');
     [].forEach.call($('st-dots').children, function (b, k) { b.setAttribute('aria-current', k === i); });
     $('st-count').textContent = 'Step ' + (i + 1) + ' of ' + SCENES.length;
     $('st-prev').disabled = i === 0; $('st-next').disabled = i === SCENES.length - 1;
-    if (sc.ctl) setTimeout(function () { applyControl(sc.ctl); }, reduce ? 0 : 180);
+    setTimeout(function () {
+      if (my !== story.token) return;   // a newer step has been requested; do not draw this one over it
+      stage.innerHTML = sc.svg();
+      stage.setAttribute('aria-label', sc.title);
+      stage.classList.remove('swap');
+      if (sc.ctl) applyControl(sc.ctl, true); else setResult(sc.res(), true);
+      if (sc.after) sc.after();
+    }, reduce ? 0 : 160);
   }
 
   function replay() { show(story.i); }
@@ -378,13 +404,26 @@
   $('st-replay').addEventListener('click', replay);
   $('st-auto').addEventListener('click', function () { setAuto(!story.auto); });
   if (reduce) $('st-auto').hidden = true;
-  $('story').addEventListener('keydown', function (e) {
-    var t = e.target && e.target.tagName;
-    if (t === 'INPUT' || t === 'SELECT') return;
-    if (e.key === 'ArrowRight') { show(story.i + 1); e.preventDefault(); }
-    else if (e.key === 'ArrowLeft') { show(story.i - 1); e.preventDefault(); }
+
+  /* Arrow keys step the story whenever it is on screen, without having to click it first. */
+  document.addEventListener('keydown', function (e) {
+    var t = e.target && e.target.tagName, r, view = $('view-present');
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA') return;
+    if (document.documentElement.classList.contains('presenting') || !view || view.hidden) return;
+    r = $('story').getBoundingClientRect();
+    if (r.bottom < window.innerHeight * 0.15 || r.top > window.innerHeight * 0.85) return;
+    e.preventDefault();
+    show(story.i + (e.key === 'ArrowRight' ? 1 : -1));
+    if (story.auto) tick();
   });
 
-  window.WT_STORY = { count: SCENES.length, show: show, replay: replay };
+  var resizeT = 0;
+  window.addEventListener('resize', function () { clearTimeout(resizeT); resizeT = setTimeout(relayout, 160); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(relayout);
+
+  window.WT_STORY = { count: SCENES.length, show: show, replay: replay, relayout: relayout };
+  lockHeight();
   show(0);
 })();
