@@ -22,6 +22,7 @@
       <div class="tabs" role="tablist" aria-label="Sections">
         <button class="tab" role="tab" id="tab-reproduce" aria-controls="view-reproduce" data-view="reproduce">Reproduce</button>
         <button class="tab" role="tab" id="tab-present" aria-controls="view-present" data-view="present">Present</button>
+        <button class="tab" role="tab" id="tab-maths" aria-controls="view-maths" data-view="maths">CARE maths</button>
       </div>
       <div class="spacer"></div>
       <button class="ghost" id="present-btn" type="button">Full screen</button>
@@ -172,6 +173,18 @@
     </div>
   </section>
 
+  <!-- MATHS -->
+  <section class="view" id="view-maths" role="tabpanel" aria-labelledby="tab-maths" hidden>
+    <div class="hero">
+      <h1>How CARE is calculated</h1>
+      <p class="lead" id="m-lead"></p>
+      <span class="chip"><i></i>The calculators use made-up examples to show the mechanics. The real scores come from the committed runs.</span>
+    </div>
+    <div class="m-toc" id="m-toc" role="group" aria-label="Jump to a section"></div>
+    <div class="m-flow" id="m-flow"></div>
+    <div class="m-sections" id="m-sections"></div>
+  </section>
+
   <footer id="foot"></footer>
 </main>
 
@@ -185,6 +198,7 @@
 
 <script src="data.js"></script>
 <script src="assets/story.js"></script>
+<script src="assets/maths.js"></script>
 <script src="assets/app.js"></script>
 </body>
 </html>

@@ -12,14 +12,24 @@
   function sgn(v, d) { d = d === undefined ? 3 : d; return (v < 0 ? MINUS : '+') + Math.abs(v).toFixed(d); }
   function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
 
-  var FED = G.arms.filter(function (id) { return id !== REF && id !== 'central_sequential'; }).concat(G.mu, G.priv);
-  var refCare = X[REF].metrics.care;
-  var maxFed = Math.max.apply(null, FED.map(function (id) { return X[id].metrics.care; }));
-  var noBeat = maxFed <= refCare;
+  var FED = ['F1', 'F2'].concat(G.mu, G.priv);   // the two centralised rows are comparators, not federated
   var nSeeds = Math.max.apply(null, Object.keys(X).map(function (id) { return X[id].seeds.length; }));
+  var MAIN = Object.keys(X).filter(function (id) { return X[id].seeds.length === nSeeds; });   // rows run at every seed
+  var refCare = X[REF].metrics.care, refSd = X[REF].sd ? X[REF].sd.care : null;
+  var fedMain = FED.filter(function (id) { return MAIN.indexOf(id) >= 0; });
+  var bestId = (fedMain.length ? fedMain : FED).slice().sort(function (a, b) { return X[b].metrics.care - X[a].metrics.care; })[0];
+  var maxFed = X[bestId].metrics.care;
+  var noBeat = maxFed <= refCare;
   var seedLabel = nSeeds === 1 ? 'seed ' + X[REF].seeds[0] : 'mean of ' + nSeeds + ' seeds';
   var withCi = Object.keys(X).filter(function (id) { return X[id].ci; });
   var excl = withCi.filter(function (id) { return X[id].ci.excludes_zero; }).length;
+  var verdict = noBeat ? 'No federated setting scored higher than local training'
+    : excl === 0 ? 'Federated learning scored about the same as local training' : 'Federated learning differed from local training';
+  var intervalText = excl === 0 ? 'Every 95% interval against local training includes zero.'
+    : excl + ' of ' + withCi.length + ' intervals against local training exclude zero.';
+  function seedsOf(id) { return X[id].seeds.length; }
+  function nTxt(v) { return Math.abs(v - Math.round(v)) < 1e-9 ? String(Math.round(v)) : v.toFixed(1); }
+  function names(ids) { return ids.map(function (id) { return dn(id).replace(' (D)', ''); }).join(', '); }
 
   function dn(id) {
     var g = X[id].group;
@@ -31,48 +41,57 @@
 
   /* ---------- header, hero, tiles, copy ---------- */
   function renderStatic() {
-    el('result-line').innerHTML = (noBeat
-      ? '<b>No federated setting scored higher than local training</b> (CARE ' + f3(refCare) + ')'
-      : '<b>Best federated CARE ' + f3(maxFed) + '</b> against ' + f3(refCare) + ' for local training') +
-      ' on Wind Farm C, ' + seedLabel + '.';
+    el('result-line').innerHTML = '<b>' + verdict + '</b> (' + esc(X[bestId].label) + ' ' + f3(maxFed) + ' against ' + f3(refCare) +
+      ' for local training, ' + seedLabel + ').';
     el('hero-lead').textContent = M.n_turbines + ' turbines, each a federated client, trained a shared fault detector and were scored on ' +
-      M.n_events + ' events (' + M.n_anomaly + ' with a fault).' + (noBeat ? ' No federated setting scored higher than each turbine training alone.' : '');
-    el('hero-chip').textContent = (nSeeds === 1 ? 'Single seed (' + X[REF].seeds[0] + '). ' : 'Mean of ' + nSeeds + ' seeds. ') +
-      (excl === 0 ? 'Every 95% interval against local training includes zero.'
-        : excl + ' of ' + withCi.length + ' intervals against local training exclude zero.');
+      M.n_events + ' events (' + M.n_anomaly + ' with a fault). ' +
+      (noBeat ? 'No federated setting scored higher than each turbine training alone.'
+        : excl === 0 ? 'On average federated averaging came out slightly ahead of each turbine training alone, but the gap is within the uncertainty of these runs.' : '');
+    el('hero-chip').textContent = (nSeeds === 1 ? 'Single seed (' + X[REF].seeds[0] + '). '
+      : 'Mean of ' + nSeeds + ' seeds on the ' + MAIN.length + ' main rows, seed ' + X[REF].seeds[0] + ' only on the rest. ') + intervalText;
 
-    var bestMu = G.mu.slice().sort(function (a, b) { return X[b].metrics.care - X[a].metrics.care; })[0];
+    var muIds = G.mu.slice().sort(function (a, b) { return seedsOf(b) - seedsOf(a) || X[b].metrics.care - X[a].metrics.care; });
+    var bestMu = muIds[0];
     var noisy = G.priv.filter(function (id) { return X[id].epsilon !== null; });
     var noisyMean = noisy.reduce(function (s, id) { return s + X[id].metrics.care; }, 0) / noisy.length;
     var f1 = X.F1;
     var tiles = [
-      ['ref', 'Local training', f3(refCare), plural(X[REF].detected, 'fault', 'faults') + ' detected of ' + M.n_anomaly],
-      ['fed', 'FedAvg', f3(f1.metrics.care), sgn(f1.ci.diff) + ' vs local'],
-      ['fed', 'Best FedProx', f3(X[bestMu].metrics.care), X[bestMu].label.replace('μ', 'Proximal weight μ')],
-      ['priv', 'With privacy noise', '≈' + noisyMean.toFixed(2), 'The models barely train']
+      ['ref', 'Local training', f3(refCare), refSd !== null ? '\u00b1 ' + f3(refSd) + ' over ' + nSeeds + ' seeds' : plural(X[REF].detected, 'fault', 'faults') + ' detected of ' + M.n_anomaly],
+      ['fed', 'FedAvg', f3(f1.metrics.care), sgn(f1.ci.diff) + ' vs local \u00b7 ' + plural(seedsOf('F1'), 'seed', 'seeds')],
+      ['fed', 'FedProx', f3(X[bestMu].metrics.care), X[bestMu].label.replace('\u03bc', 'Weight \u03bc') + ' \u00b7 ' + plural(seedsOf(bestMu), 'seed', 'seeds')],
+      ['priv', 'With privacy noise', '\u2248' + noisyMean.toFixed(2), (seedsOf(noisy[0]) === 1 ? 'Seed ' + X[noisy[0]].seeds[0] + ' only \u00b7 ' : '') + 'the models barely train']
     ];
     el('tiles').innerHTML = tiles.map(function (t) {
       return '<div class="card tile"><div class="k"><i class="c-' + t[0] + '"></i>' + esc(t[1]) + '</div><div class="v">' + esc(t[2]) + '</div><div class="c">' + esc(t[3]) + '</div></div>';
     }).join('');
 
-    el('strip').textContent = (nSeeds === 1 ? 'One seed (' + X[REF].seeds[0] + ') per experiment. ' : 'Means over ' + nSeeds + ' seeds. ') +
+    var singles = Object.keys(X).filter(function (id) { return seedsOf(id) < nSeeds; });
+    el('strip').textContent = (nSeeds === 1 ? 'One seed (' + X[REF].seeds[0] + ') per experiment. '
+      : 'Main rows (' + names(MAIN) + ') are means of ' + nSeeds + ' seeds' + (singles.length ? '; the other rows are seed ' + X[REF].seeds[0] + ' only, so treat them as indicative. ' : '. ')) +
       'The 95% intervals resample the ' + M.n_turbines + ' turbines, not the ' + M.n_events + ' events, because events from one turbine are not independent.';
 
-    var near = FED.filter(function (id) { return id === 'F1' || (X[id].group === 'mu' && /^F3_mu(0|0\.001|0\.01|0\.1)$/.test(id)); });
-    var within = Math.max.apply(null, near.map(function (id) { return Math.abs(X[id].ci.diff); }));
-    var strongMu = G.mu.filter(function (id) { return /^F3_mu(1|10)$/.test(id); });
-    el('take-yes').innerHTML = [
-      noBeat ? 'No federated setting scored higher than local training (CARE ' + f3(refCare) + ').' : 'Best federated CARE was ' + f3(maxFed) + ' against ' + f3(refCare) + ' for local training.',
-      'FedAvg and FedProx with μ ≤ 0.1 came within ' + within.toFixed(3) + ' CARE of local training.',
-      'Stronger proximal regularisation scored lower: ' + strongMu.map(function (id) { return X[id].label + ' gave ' + f3(X[id].metrics.care); }).join(', ') + '.',
-      'With differential-privacy noise the models barely trained, so these runs give no usable relation between privacy and CARE.'
-    ].map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
-    el('take-no').innerHTML = [
-      (nSeeds === 1 ? 'These are single-seed results, so small differences cannot be ranked.' : 'Small differences still need paired tests.'),
-      (excl === 0 ? 'Every 95% interval against local training includes zero (all ' + withCi.length + ').' : excl + ' of ' + withCi.length + ' intervals exclude zero.'),
+    var sds = MAIN.map(function (id) { return X[id].sd ? X[id].sd.care : null; }).filter(function (v) { return v !== null; });
+    var strong = G.mu.filter(function (id) { return /^F3_mu(1|10)$/.test(id); });
+    var yes = [];
+    yes.push('FedAvg averaged ' + f3(f1.metrics.care) + ' over ' + plural(seedsOf('F1'), 'seed', 'seeds') + ' against ' + f3(refCare) + ' for local training. The difference of ' + sgn(f1.ci.diff) +
+      ' has a 95% interval of ' + sgn(f1.ci.lo) + ' to ' + sgn(f1.ci.hi) + ', so ' + (f1.ci.excludes_zero ? 'it is distinguishable from zero.' : 'it cannot be told apart from zero.'));
+    if (X.central && X.F2 && X['F3_mu0.1']) {
+      yes.push('The corrected centralised comparator (' + f3(X.central.metrics.care) + ') and FedProx \u03bc = 0.1 (' + f3(X['F3_mu0.1'].metrics.care) +
+        ') landed in the same range, while FedPer was lower at ' + f3(X.F2.metrics.care) + ' (' + sgn(X.F2.ci.diff) + ' vs local).');
+    }
+    if (sds.length) {
+      yes.push('Seeds of the same experiment differ by about \u00b1' + f3(Math.min.apply(null, sds)) + ' to \u00b1' + f3(Math.max.apply(null, sds)) + ' CARE, so single-seed gaps of a few thousandths are noise.');
+    }
+    yes.push('Stronger proximal weights and privacy noise scored lower (' + strong.map(function (id) { return X[id].label + ': ' + f3(X[id].metrics.care); }).join(', ') +
+      '; noise \u2248' + noisyMean.toFixed(2) + '), but those rows are seed ' + X[REF].seeds[0] + ' only.');
+    var no = [
+      excl === 0 ? 'Every 95% interval against local training includes zero (all ' + withCi.length + '), so no ranking is established.' : excl + ' of ' + withCi.length + ' intervals exclude zero.',
+      singles.length ? 'Only the ' + MAIN.length + ' main rows have ' + nSeeds + ' seeds. The FedProx sweep and the privacy runs are seed ' + X[REF].seeds[0] + ' only.' : 'All rows have ' + nSeeds + ' seeds.',
       'The ' + M.n_events + ' events come from ' + M.n_turbines + ' turbines, so they are not independent samples.',
-      'Local training was run on Kaggle with TensorFlow and the federated runs on PyTorch, so that comparison also includes a software difference.'
-    ].map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
+      'With differential-privacy noise the models barely trained, so those runs give no usable relation between privacy and CARE.'
+    ];
+    el('take-yes').innerHTML = yes.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
+    el('take-no').innerHTML = no.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
 
     el('foot').innerHTML = '<span>Built from <span class="mono">results/paper/</span> by <span class="mono">python site/build_data.py</span>. Data fingerprint <span class="mono">' + M.fingerprint + '</span>.</span>' +
       '<span>Code under the MIT licence. The CARE to Compare data keep their CC BY-SA 4.0 licence.</span>';
@@ -87,10 +106,11 @@
   function renderChart() {
     var ids = G[state.tab], m = state.metric, diff = m === 'diff';
     var refV = diff ? 0 : X[REF].metrics[m];
-    var vals = [refV];
+    var vals = [refV], anyMulti = false;
     ids.forEach(function (id) {
       vals.push(valueOf(id, m));
       if (diff && id !== REF && X[id].ci) vals.push(X[id].ci.lo, X[id].ci.hi);
+      if (!diff && seedsOf(id) > 1) { anyMulti = true; X[id].per_seed.forEach(function (p) { vals.push(p[m]); }); }
     });
     var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
     var pad = (mx - mn) * .15 || .02;
@@ -106,18 +126,22 @@
       ? '<span><i class="dash"></i>Same as local training</span><span><i class="wh"></i>95% interval (turbines resampled)</span>'
       : '<span><i class="dash"></i>Local training (D) ' + f3(refV) + '</span>') +
       '<span><i class="c-ref"></i>Reference</span><span><i class="c-fed"></i>Federated</span>' +
-      (state.tab === 'priv' ? '<span><i class="c-priv"></i>Private (DP noise)</span>' : '');
+      (state.tab === 'priv' ? '<span><i class="c-priv"></i>Private (DP noise)</span>' : '') +
+      (anyMulti ? '<span><i class="sdot-key"></i>One seed</span>' : '');
 
     var html = '<div class="grid-ov">' + ticks.map(function (t) { return '<i style="left:' + pct(t) + '%"></i>'; }).join('') +
       '<i class="ref" style="left:' + pct(refV) + '%"></i></div>';
     ids.forEach(function (id) {
-      var v = valueOf(id, m), whisk = '';
+      var v = valueOf(id, m), whisk = '', seedDots = '';
       if (diff && id !== REF && X[id].ci) {
         whisk = '<i class="whisk" style="left:' + pct(X[id].ci.lo) + '%;width:' + (pct(X[id].ci.hi) - pct(X[id].ci.lo)).toFixed(2) + '%"></i>';
       }
+      if (!diff && seedsOf(id) > 1) {
+        seedDots = X[id].per_seed.map(function (p) { return '<i class="sdot" title="seed ' + p.seed + '" style="left:' + pct(p[m]) + '%"></i>'; }).join('');
+      }
       html += '<button type="button" class="row" data-id="' + esc(id) + '" aria-pressed="' + (id === state.sel[state.tab]) + '">' +
-        '<span class="lab">' + esc(X[id].label) + '</span>' +
-        '<span class="track">' + whisk + '<i class="dot c-' + cat(id) + '" style="left:' + pct(v) + '%"></i></span>' +
+        '<span class="lab">' + esc(X[id].label) + '<small>' + plural(seedsOf(id), 'seed', 'seeds') + '</small></span>' +
+        '<span class="track">' + whisk + seedDots + '<i class="dot c-' + cat(id) + '" style="left:' + pct(v) + '%"></i></span>' +
         '<span class="val">' + (diff ? (id === REF ? 'ref' : sgn(v)) : f3(v)) + '</span></button>';
     });
     html += '<div class="axis">' + ticks.map(function (t) { return '<span style="left:' + pct(t) + '%">' + tf(t) + '</span>'; }).join('') + '</div>';
@@ -134,24 +158,26 @@
   }
 
   function renderDetail() {
-    var id = state.sel[state.tab], e = X[id], c = e.metrics.care, ci = e.ci, tag;
+    var id = state.sel[state.tab], e = X[id], c = e.metrics.care, ci = e.ci, n = seedsOf(id), tag;
     if (id === REF) tag = '<span class="tag ref">Reference</span>';
     else if (!ci.excludes_zero) tag = '<span class="tag ref">Not distinguishable from local</span>';
     else tag = '<span class="tag ' + (ci.diff < 0 ? 'bad' : 'good') + '">' + (ci.diff < 0 ? 'Lower than local' : 'Higher than local') + '</span>';
     var meters = ['coverage', 'earliness', 'reliability', 'accuracy'].map(function (k) {
       return '<div class="meter"><span>' + METRIC[k] + '</span><div class="bar-t"><div class="bar-f" style="width:' + (e.metrics[k] * 100).toFixed(1) + '%"></div></div><b>' + f3(e.metrics[k]) + '</b></div>';
     }).join('');
-    var sd = e.sd && e.sd.care !== null ? ' ± ' + f3(e.sd.care) : '';
+    var spread = e.sd && e.sd.care !== null ? '\u00b1 ' + f3(e.sd.care) + ' over ' + n + ' seeds' : 'seed ' + e.seeds[0] + ' only';
+    var perSeed = n > 1 ? '<p class="small">Per seed: ' + e.per_seed.map(function (p) { return '<span class="mono">' + p.seed + '</span> ' + f3(p.care); }).join(' \u00b7 ') + '</p>' : '';
     el('detail').innerHTML =
       '<h3>' + esc(dn(id)) + '</h3>' +
-      '<div class="row2"><div class="big">' + f3(c) + '</div><span class="delta">CARE' + sd + (id === REF ? '' : ' &nbsp;' + sgn(ci.diff) + ' vs local') + '</span></div>' +
+      '<div class="row2"><div class="big">' + f3(c) + '</div><span class="delta">CARE<br>' + spread + '</span></div>' +
       '<div>' + tag + '</div>' +
-      (id === REF ? '' : '<p class="small">95% interval for the difference: ' + sgn(ci.lo) + ' to ' + sgn(ci.hi) + ' (' + ci.draws + ' draws, turbines resampled).</p>') +
+      (id === REF ? '' : '<p class="small">Difference from local training: <b>' + sgn(ci.diff) + '</b>. 95% interval ' + sgn(ci.lo) + ' to ' + sgn(ci.hi) + ' (' + ci.draws + ' draws, turbines resampled).</p>') +
+      perSeed +
       '<div class="meters">' + meters + '</div>' +
-      '<div class="facts"><span><b>' + e.detected + '</b> of ' + M.n_anomaly + ' faults found</span><span><b>' + e.false_alarms + '</b> of ' + M.n_normal + ' false alarms</span></div>' +
-      (e.epsilon !== null ? '<p class="small">Privacy budget ε = ' + e.epsilon.toFixed(2) + ' (largest across turbines).</p>' : '') +
+      '<div class="facts"><span><b>' + nTxt(e.detected) + '</b> of ' + M.n_anomaly + ' faults found' + (n > 1 ? ' (mean)' : '') + '</span><span><b>' + nTxt(e.false_alarms) + '</b> of ' + M.n_normal + ' false alarms' + (n > 1 ? ' (mean)' : '') + '</span></div>' +
+      (e.epsilon !== null ? '<p class="small">Privacy budget \u03b5 = ' + e.epsilon.toFixed(2) + ' (largest across turbines).</p>' : '') +
       (e.note ? '<p class="small">' + esc(e.note) + '</p>' : '') +
-      '<p class="path"><a href="' + REPO + '/tree/main/' + e.path + '" target="_blank" rel="noopener">' + esc(e.path) + '</a> &middot; ' + (e.seeds.length === 1 ? 'seed ' + e.seeds[0] : e.seeds.length + ' seeds') + '</p>';
+      '<p class="path"><a href="' + REPO + '/tree/main/' + e.path + '" target="_blank" rel="noopener">' + esc(e.path) + '</a></p>';
   }
 
   /* events tab */
@@ -159,27 +185,32 @@
   function fillSelect(sel, val) {
     sel.innerHTML = ALL_IDS.map(function (id) { return '<option value="' + esc(id) + '"' + (id === val ? ' selected' : '') + '>' + esc(dn(id)) + '</option>'; }).join('');
   }
-  function outcome(ev, det) {
-    return ev.anomaly ? (det ? ['Detected', 'good'] : ['Missed', 'bad']) : (det ? ['False alarm', 'bad'] : ['Correct', 'good']);
+  /* Detected in `hits` of `n` seeds. A majority of seeds counts as detected when deciding whether an outcome changed. */
+  function outcome(ev, hits, n) {
+    var partial = hits > 0 && hits < n, frac = partial ? ' ' + hits + '/' + n : '';
+    if (ev.anomaly) return hits === n ? ['Detected', 'good'] : hits === 0 ? ['Missed', 'bad'] : ['Detected' + frac, 'mid'];
+    return hits === 0 ? ['Correct', 'good'] : hits === n ? ['False alarm', 'bad'] : ['False alarm' + frac, 'mid'];
   }
   function renderEvents() {
-    var a = new Set(X[state.evA].detected_events), b = new Set(X[state.evB].detected_events);
+    var A = X[state.evA], B = X[state.evB], na = A.seeds.length, nb = B.seeds.length;
     var changed = 0, aF = 0, bF = 0, aA = 0, bA = 0;
-    D.events.forEach(function (ev) {
-      var da = a.has(ev.id), db = b.has(ev.id);
-      if (da !== db) changed++;
-      if (ev.anomaly) { aF += da; bF += db; } else { aA += da; bA += db; }
+    D.events.forEach(function (ev, i) {
+      var fa = A.hits[i] / na, fb = B.hits[i] / nb;
+      if ((fa >= 0.5) !== (fb >= 0.5)) changed++;
+      if (ev.anomaly) { aF += fa; bF += fb; } else { aA += fa; bA += fb; }
     });
-    el('ev-summary').textContent = changed + ' of ' + M.n_events + ' events change outcome. Faults found: ' + aF + ' vs ' + bF + ' of ' + M.n_anomaly +
-      '. False alarms: ' + aA + ' vs ' + bA + ' of ' + M.n_normal + '.';
-    var rows = D.events.filter(function (ev) {
-      var diff = a.has(ev.id) !== b.has(ev.id);
-      return state.evF === 'all' || (state.evF === 'changed' && diff) || (state.evF === 'fault' && ev.anomaly) || (state.evF === 'normal' && !ev.anomaly);
+    el('ev-summary').textContent = changed + ' of ' + M.n_events + ' events change outcome. Faults found: ' + nTxt(aF) + ' vs ' + nTxt(bF) + ' of ' + M.n_anomaly +
+      '. False alarms: ' + nTxt(aA) + ' vs ' + nTxt(bA) + ' of ' + M.n_normal + '.' +
+      (na > 1 || nb > 1 ? ' With several seeds, a cell shows how many seeds detected the event, and counts are averages.' : '');
+    var rows = D.events.map(function (ev, i) { return { ev: ev, i: i }; }).filter(function (r) {
+      var diff = (A.hits[r.i] / na >= 0.5) !== (B.hits[r.i] / nb >= 0.5);
+      return state.evF === 'all' || (state.evF === 'changed' && diff) || (state.evF === 'fault' && r.ev.anomaly) || (state.evF === 'normal' && !r.ev.anomaly);
     });
     var head = '<thead><tr><th>Event</th><th>Turbine</th><th>Type</th><th>' + esc(dn(state.evA)) + '</th><th>' + esc(dn(state.evB)) + '</th></tr></thead>';
-    var body = rows.map(function (ev) {
-      var oa = outcome(ev, a.has(ev.id)), ob = outcome(ev, b.has(ev.id));
-      return '<tr class="' + (oa[0] !== ob[0] ? 'changed' : '') + '"><td class="n">' + ev.id + '</td><td class="n">' + ev.asset + '</td><td>' + (ev.anomaly ? 'Fault' : 'Normal') +
+    var body = rows.map(function (r) {
+      var oa = outcome(r.ev, A.hits[r.i], na), ob = outcome(r.ev, B.hits[r.i], nb);
+      var diff = (A.hits[r.i] / na >= 0.5) !== (B.hits[r.i] / nb >= 0.5);
+      return '<tr class="' + (diff ? 'changed' : '') + '"><td class="n">' + r.ev.id + '</td><td class="n">' + r.ev.asset + '</td><td>' + (r.ev.anomaly ? 'Fault' : 'Normal') +
         '</td><td><span class="out ' + oa[1] + '">' + oa[0] + '</span></td><td><span class="out ' + ob[1] + '">' + ob[0] + '</span></td></tr>';
     }).join('');
     el('ev-table').innerHTML = head + '<tbody>' + (body || '<tr><td colspan="5">No events match this filter.</td></tr>') + '</tbody>';
@@ -236,7 +267,7 @@
       { h: 'Run the experiments', p: 'Runs go to results/runs/<experiment>/s<seed>/, which is git-ignored. "all" uses the corrected comparator central; name central_sequential to reproduce the paper’s.', c: ['python -m windturbine list', 'python -m windturbine run all --seeds 42 --clients /path/to/clients --jobs 3'] },
       { h: 'Build Table I and Fig. 4', p: 'summarise copies the small files of each finished run into results/paper and rebuilds the tables from them.', c: ['python -m windturbine summarise --runs results/runs --out results/paper', 'python -m windturbine figures'] }
     ] },
-    c: { title: 'Add more seeds', sub: 'A seed changes only the model initialisation and the minibatch order; the client partitions are fixed by the export. One seed of every experiment is about 20 run-hours, roughly 7 hours of wall time with --jobs 3.', steps: [
+    c: { title: 'Add more seeds', sub: 'The committed results already include seeds ' + X[REF].seeds[0] + ' to ' + X[REF].seeds[X[REF].seeds.length - 1] + ' for ' + names(MAIN) + '. A seed changes only the model initialisation and the minibatch order; the client partitions are fixed by the export. One seed of every experiment is about 20 run-hours, roughly 7 hours of wall time with --jobs 3.', steps: [
       { h: 'Finish track B first', p: 'Seeds reuse the same install and the same client export.' },
       { h: 'Run the priority subset', p: 'The rows the paper’s comparisons rest on, roughly 2 hours of wall time per seed. Runs that already exist are skipped, so an interrupted batch resumes when you repeat the command.', c: 'python -m windturbine run D central F1 F2 F3_mu0.1 --seeds 42 43 44 45 46 --clients /path/to/clients --jobs 3' },
       { h: 'Run the remaining rows', p: 'Optional, for the full table at every seed.', c: 'python -m windturbine run all --seeds 43 44 45 46 --clients /path/to/clients --jobs 3' },
@@ -289,22 +320,23 @@
   }).join('') + '</tbody>';
 
   el('notes').innerHTML = [
-    ['D and F1 to F4 were trained in different environments', 'D was trained on Kaggle with TensorFlow, and its results were copied from notebook output at six decimals. F1 to F4 were trained on an RTX 5070 Ti with Keras 3 on PyTorch, on a local rebuild of the client export with identical per-turbine row counts. New D runs use the PyTorch training step, so multi-seed results do not have this difference.'],
-    ['The paper’s centralised comparator drifted', 'In central_sequential each epoch trains one turbine at a time in random order, so the model moves toward the last turbine. Its validation error was lowest at epoch 2 and rose by epoch 100. The corrected comparator, central, shuffles minibatches across all turbines and is the one to use for new runs.'],
-    ['All committed runs use one seed', 'Add seeds (track C) before drawing conclusions about differences of a few thousandths of CARE.']
+    ['Local training was rerun at every seed', 'D has ' + nSeeds + ' seeds (' + X[REF].seeds.join(', ') + '), all trained with the same PyTorch step as F1 to F4 on a local rebuild of the client export. The earlier Kaggle (TensorFlow) seed-42 result of 0.640 is kept as evidence.json in results/paper/D/s42 for reference and is not part of Table I.'],
+    ['The paper\u2019s centralised comparator drifted', 'In central_sequential each epoch trains one turbine at a time in random order, so the model moves toward the last turbine. Its validation error was lowest at epoch 2 and rose by epoch 100. The corrected comparator, central, shuffles minibatches across all turbines and is the one to use for new runs.'],
+    [MAIN.length + ' rows have ' + nSeeds + ' seeds, the rest have one', names(MAIN) + ' have seeds ' + X[REF].seeds[0] + ' to ' + X[REF].seeds[X[REF].seeds.length - 1] + '. The rest of the FedProx sweep and the privacy runs are seed ' + X[REF].seeds[0] + ' only, so their differences from local training are indicative. Add seeds (track C) before drawing conclusions about differences of a few thousandths of CARE.']
   ].map(function (n) { return '<div class="card note"><b>' + esc(n[0]) + '</b><span>' + esc(n[1]) + '</span></div>'; }).join('');
 
   el('faq').innerHTML = [
     ['I have no GPU. What can I do?', 'Track A needs no GPU and no download. The test suite also runs on CPU in about 3 minutes, because its training tests use tiny synthetic data.'],
     ['The run stops before training with a dataset hash message', 'Every experiment pins the hash of the client export in configs/paper/_dataset.yaml. To use another export on purpose, add --dataset-sha <hash> and --dataset-reason "<why>" to the run command; the reason is recorded in each run’s manifest.'],
     ['An overnight batch was interrupted', 'Repeat the same command. Runs that already exist are skipped, so the batch resumes where it stopped.'],
-    ['My D result does not match Table I exactly', 'The committed seed-42 D result came from Kaggle notebook output at six decimals. A new D run uses the PyTorch training step and will differ slightly.'],
+    ['Why is the earlier 0.640 for local training not in Table I?', 'That was a single Kaggle (TensorFlow) run at seed 42. Table I now uses PyTorch reruns at ' + nSeeds + ' seeds, which average ' + f3(refCare) + (refSd !== null ? ' ± ' + f3(refSd) : '') + '; seed ' + X[REF].seeds[0] + ' alone gives ' + f3(X[REF].per_seed[0].care) + '.'],
+    ['Where do the CARE formulas come from?', 'The CARE maths tab walks through each one with live calculators, and every formula there is the one implemented in src/windturbine/scoring/.'],
     ['Does training work on Windows?', 'Yes. Keras 3 runs on the PyTorch backend, which the package selects automatically, so the GPU is used on Windows as well as Linux. requirements-lock.txt lists the exact versions of the seed-42 runs.']
   ].map(function (q) { return '<details><summary>' + esc(q[0]) + '</summary><p>' + esc(q[1]) + '</p></details>'; }).join('');
 
   /* ---------- views and theme ---------- */
   function show(view) {
-    ['present', 'reproduce'].forEach(function (v) {
+    ['present', 'reproduce', 'maths'].forEach(function (v) {
       el('view-' + v).hidden = v !== view;
       el('tab-' + v).setAttribute('aria-selected', v === view);
     });
@@ -314,7 +346,7 @@
   [].forEach.call(document.querySelectorAll('.tab'), function (b) {
     b.addEventListener('click', function () { location.hash = b.dataset.view; });
   });
-  function route() { show(location.hash === '#reproduce' ? 'reproduce' : 'present'); }
+  function route() { show(location.hash === '#reproduce' ? 'reproduce' : location.hash === '#maths' ? 'maths' : 'present'); }
   window.addEventListener('hashchange', route);
 
   function isDark() {
