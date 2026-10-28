@@ -182,10 +182,12 @@
     "early_stop_patience": 10,
     "extra": {
       "aggregation_weight": "n_rows_after_leak_removal",
-      "dataset_override_reason": "Local E03 rebuild (D:/wt_work, 2026-10-26) from the same source CSVs; the Kaggle export bb2ed3ff is not on this machine. Per-turbine train/val counts match the Kaggle D evidence exactly (1,845,037 / 347,569).",
+      "client_unit": "asset_id",
+      "dataset_override_reason": "Local E03 rebuild from the CARE to Compare Wind Farm C CSVs; per-turbine fitting/validation counts match the Kaggle export bb2ed3ff (1,845,037 / 347,569).",
       "expected_clients": 22,
       "expected_dataset_manifest_sha256": "1a43906dd01a0ed2f5a8fee5f40cccda949e6fa85c24c80851c79ae3381165b4",
       "expected_events": 58,
+      "fingerprint_decimals": 6,
       "fraction_fit": 1.0,
       "framework": "flwr",
       "local_epochs": 1,
@@ -196,7 +198,9 @@
       ],
       "max_hours": 11,
       "n_clients": 22,
+      "remove_rows_seen_in_prediction": true,
       "rounds": 100,
+      "runner": "federated",
       "scaler": "local",
       "shared_layers": [
         "encode1",
@@ -236,11 +240,11 @@
     "wind_speed_cutin": 3.0,
     "wind_speed_rated": 12.0
   },
-  "config_hash": "9fa7044132ec966886e9b6f78871605e00b367e9aa9dc2b1d0410181e60114ea",
-  "created_utc": "2026-10-26T19:56:55.283830+00:00",
+  "config_hash": "0b89b63c913b0ff2206577d070cf98db9c1fb72ac1bc239c87734a2191e10208",
+  "created_utc": "2026-10-28T08:21:33.926856+00:00",
   "dataset_hashes_rechecked": true,
   "dataset_manifest_sha256": "1a43906dd01a0ed2f5a8fee5f40cccda949e6fa85c24c80851c79ae3381165b4",
-  "dataset_override_reason": "Local E03 rebuild (D:/wt_work, 2026-10-26) from the same source CSVs; the Kaggle export bb2ed3ff is not on this machine. Per-turbine train/val counts match the Kaggle D evidence exactly (1,845,037 / 347,569).",
+  "dataset_override_reason": "Local E03 rebuild from the CARE to Compare Wind Farm C CSVs; per-turbine fitting/validation counts match the Kaggle export bb2ed3ff (1,845,037 / 347,569).",
   "dataset_source_identity": {
     "bundle_sha256": null,
     "requested_git_ref": null,
@@ -306,13 +310,14 @@
     "56": 66355
   },
   "flower_version": "1.40.0",
-  "implementation_sha256": "81f46156755bb1edc256c627cf81e4c378a4695f2fcbd90d8fa8d1c82b9d50f4",
+  "implementation_sha256": "d80e7deb1f27b27457e8f7f1a8ec84380dc256ef94fa539c591e61c425006561",
   "inactive_policy": "zero-fill input and target; include all common dimensions in MSE and aggregation",
   "initial_weights_sha256": "4bde301b724264215d965a22075549db0a94e65309dd1fc24085b974d5d21c9a",
   "local_optimizer_policy": "fresh Adam for every client and round; fixed learning rate",
   "model_seed": 42,
   "n_events": 58,
   "packages": {
+    "dp-accounting": "0.6.0",
     "flwr": "1.40.0",
     "keras": "3.15.1",
     "numpy": "2.5.4",
@@ -320,7 +325,7 @@
     "pyarrow": "26.0.0",
     "scikit-learn": "1.9.1",
     "scipy": "1.18.1",
-    "tensorflow": "2.21.0"
+    "torch": "2.11.0+cu128"
   },
   "partition_seed": 42,
   "preflight": {
@@ -383,8 +388,8 @@
     }
   },
   "privacy": null,
-  "run_id": "20261026T185302_930994Z",
-  "runtime_seconds": 3832.802708000003,
+  "run_id": "s42",
+  "runtime_seconds": 3915.6276291000004,
   "schema": [
     "power_17_avg",
     "power_2_avg",
@@ -644,47 +649,10 @@
   ],
   "simulation": "one process; sequential clients; no networking or isolation",
   "source_identity": {
-    "bundle_sha256": null,
-    "requested_git_ref": null,
-    "resolved_git_commit": null,
-    "source_files": {
-      "configs/arm_isolated.yaml": "ab352789a22a1d3cfe52d6854ebe095a04e85be89b10e0d51beedd3694ec8af1",
-      "configs/arm_local_turbine.yaml": "8db53eded3df967c36e65c4a4d3712438a24581bc2a3abb6fb74520a59261795",
-      "configs/arm_pooled.yaml": "c2c70de648928f873760115a5f405f3abb44ca6fe663cb9ee7054cb79c69cfb7",
-      "configs/arm_pooled_dedup.yaml": "485e5470df67831de28dde349d7874554857f9cf9b4d0b7ccba1ba717f40b34d",
-      "configs/base.yaml": "16668bbdc1a309e8c60d5c8fcc7d831bed2b7fb5b72eb28cfbb19d461a6e7533",
-      "configs/clients.yaml": "41cdfee241855f0eb93d228d471b9a8c1224214155b539a25e96e5f0b1121f52",
-      "configs/fed_fedavg.yaml": "d538f349350da04a4addcca612adcca1e3fb4e90fec9e699eee1c6a35a1f5be9",
-      "configs/fed_fedprox.yaml": "c747ea630eac78e088756a5a736a611ad152153d3544d37d5b7c5954d4a0e57b",
-      "configs/fed_personalised.yaml": "4f640d08f752ef1c503812426e841c245197739169122a421d570f61e5f65bf0",
-      "configs/fed_private.yaml": "9c0ca2d82eddc0ffc910b207e7e991a7098790b907bd2a1e2ed7474a0cdbd12e",
-      "notebooks/13_arm_local_turbine.ipynb": "e58b3630abfdc697afbd740f878c82f5a5b479d9438f57d94a63f2a9970106eb",
-      "notebooks/20_federated_clients.ipynb": "58669f4f4f0d75feaf471ae9989ca47cc0a54245cba51bb4c25438adaa7c8351",
-      "notebooks/30_fedavg.ipynb": "3babe3ee826a770fbb639923a5518588a25931fb3bac5d482e64c82909c4a626",
-      "notebooks/31_fed_personalised.ipynb": "f0b3b72451f917e1b8e323d5394cb9f8811c446c009fc7376546c1b4808cf926",
-      "notebooks/32_fedprox.ipynb": "f4166b87f97c429a7f551d7bed9f244b11149512e89498936cafb0bee7360ddb",
-      "notebooks/33_fed_private.ipynb": "a8732e38dd6a5612c3b4971190827c48024abc49bccc01fc402d842323c1ab79",
-      "src/windturbine/__init__.py": "48ad9b8c0b975133c77033ef3322d4e44a222c72d7a23938bb02388262dd5aa8",
-      "src/windturbine/audit/__init__.py": "06ff067cc72cbdc994f23e238fba5e0c1e513efd2086184598b580c6e04fb6ae",
-      "src/windturbine/audit/fingerprints.py": "0f1a8a1ab5cc0be7e0c6a5e12a502a75be6ca034d9b65f8c2b1d8bd9051a7dbe",
-      "src/windturbine/config.py": "d18879f9cbd1c0f29b8e3e81fe5c7eae47739e8193c049820a0ba61b02b2cfb0",
-      "src/windturbine/data/__init__.py": "e4265a1e162c28bc743ec42cd60c3448395a16e52e8ad004f09a845dce54ec47",
-      "src/windturbine/data/clients.py": "d37f3a9638616c7db079b93a7b5ee3980a26df84246aaa975c0418ed151bec78",
-      "src/windturbine/federated/__init__.py": "6084a2f5ef4e79486a6b59390b629b0dc59617d9336064b0e75ef2d01aa546e9",
-      "src/windturbine/federated/fedavg.py": "3562e3f7e833daedaab7e5d829789833d6482a09d90518d2b18c7eb3049c51af",
-      "src/windturbine/federated/smoke.py": "f8f1bc52f3b0a380f3984bbac73709f8baa9a820db8780646d19e84146262cff",
-      "src/windturbine/federated/strategies.py": "81f46156755bb1edc256c627cf81e4c378a4695f2fcbd90d8fa8d1c82b9d50f4",
-      "src/windturbine/models/__init__.py": "c3b3efebe1e1374385ffafe8fe60d670c5d6eda4a12c0030c6038a75def74239",
-      "src/windturbine/models/autoencoder.py": "168e2118ee84b910eb678f75d3b73320511dea8276ff65803675617b32d85b97",
-      "src/windturbine/paths.py": "25afffea5ebeaa599aafee2e1143f2847f5b2c9126dea5cdd5c64362abff162c",
-      "src/windturbine/runners/__init__.py": "8a488f744a110815f535d65ac42b28419caaa3228c9b954347135c8dfa0e2b27",
-      "src/windturbine/runs.py": "844e09b4a66f4ab0063efebca8d6c209f2bff327c9fd65a0b539b0fd34d325f0",
-      "src/windturbine/scoring/__init__.py": "753566c2d49b3fd3506204e9d8911b376714e9012aa406a5caf91441e2fd1af2",
-      "src/windturbine/scoring/care.py": "43d288e326d5e136ddfed69767f05a3dd764902c23469e35366c27f11ca179d8",
-      "src/windturbine/scoring/evaluation.py": "8b38566d57b84de8b15ad4777567119816bf215dbc8eb6ddfab8bae3a2136dc5",
-      "src/windturbine/scoring/threshold.py": "e762f5057c1f555820befcb669ac6f0486364ecc3acfef7aedab7143395b359f"
-    },
-    "source_tree_sha256": "4cde0e5f61abdad622ca441316b667590511bd69365a5b480164cc2963bcea0a"
+    "git": {
+      "dirty": true,
+      "sha": "e658d34da229b997f86a24c184833ae83da5b2a9"
+    }
   },
   "strategy": {
     "dp_clip_norm": null,

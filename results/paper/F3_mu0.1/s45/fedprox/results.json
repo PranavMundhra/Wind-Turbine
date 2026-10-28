@@ -1,0 +1,24 @@
+{
+  "accuracy": 0.9413043587877314,
+  "care": 0.633443077329718,
+  "coverage": 0.3580794296383666,
+  "earliness": 0.2954592782697119,
+  "event_confusion": {
+    "fn": 14,
+    "fp": 6,
+    "tn": 25,
+    "tp": 13
+  },
+  "fn": 14,
+  "fp": 6,
+  "n_anomaly_events": 27,
+  "n_normal_events": 31,
+  "reliability": 0.6310679611650486,
+  "support": {
+    "accuracy": 31,
+    "coverage": 27,
+    "earliness": 27
+  },
+  "tn": 25,
+  "tp": 13
+}

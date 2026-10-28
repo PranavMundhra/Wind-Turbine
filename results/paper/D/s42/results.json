@@ -1,21 +1,24 @@
 {
-  "coverage": 0.369207,
-  "earliness": 0.294633,
-  "reliability": 0.654206,
-  "accuracy": 0.940607,
-  "care": 0.639852,
-  "tp": 14,
-  "fp": 6,
-  "fn": 13,
-  "tn": 25,
-  "support": {
-    "coverage": 27,
-    "earliness": 27,
-    "accuracy": 31
+  "accuracy": 0.9303581705950325,
+  "care": 0.6319963098082381,
+  "coverage": 0.36828086963090767,
+  "earliness": 0.3007322373798817,
+  "event_confusion": {
+    "fn": 12,
+    "fp": 8,
+    "tn": 23,
+    "tp": 15
   },
-  "seed": 42,
-  "n_clients": 22,
-  "n_events": 58,
-  "training_minutes": 109.58487513462703,
-  "precision": "metrics copied from notebook stdout at 6 decimal places; not original results.json"
+  "fn": 12,
+  "fp": 8,
+  "n_anomaly_events": 27,
+  "n_normal_events": 31,
+  "reliability": 0.6302521008403361,
+  "support": {
+    "accuracy": 31,
+    "coverage": 27,
+    "earliness": 27
+  },
+  "tn": 23,
+  "tp": 15
 }
