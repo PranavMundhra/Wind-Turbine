@@ -55,13 +55,6 @@
       return '<div class="card tile"><div class="k"><i class="c-' + t[0] + '"></i>' + esc(t[1]) + '</div><div class="v">' + esc(t[2]) + '</div><div class="c">' + esc(t[3]) + '</div></div>';
     }).join('');
 
-    el('dg-turbines').textContent = M.n_turbines + ' turbines';
-    el('idea-list').innerHTML = [
-      ['Clean clients', 'In a preliminary pooled experiment, 25.4% of prediction rows (40,216 of 158,528) also appeared in the training data. Every client here drops such rows before training.'],
-      ['One client per turbine', M.n_turbines + ' turbines and ' + M.n_events + ' events, ' + M.n_anomaly + ' with a fault. In federated training only model weights travel to the server.'],
-      ['Scored with CARE', 'Coverage, Earliness, Reliability and Accuracy combine into one score. Higher is better.']
-    ].map(function (i) { return '<li><b>' + i[0] + '</b><span>' + esc(i[1]) + '</span></li>'; }).join('');
-
     el('strip').textContent = (nSeeds === 1 ? 'One seed (' + X[REF].seeds[0] + ') per experiment. ' : 'Means over ' + nSeeds + ' seeds. ') +
       'The 95% intervals resample the ' + M.n_turbines + ' turbines, not the ' + M.n_events + ' events, because events from one turbine are not independent.';
 
@@ -338,17 +331,18 @@
   if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themeLabel);
 
   /* ---------- full-screen presenting ---------- */
-  var SLIDES = [
-    { id: 's-hero' }, { id: 's-idea' },
-    { id: 's-explorer', tab: 'arms' }, { id: 's-explorer', tab: 'mu' }, { id: 's-explorer', tab: 'priv' }, { id: 's-explorer', tab: 'events' },
-    { id: 's-take' }
-  ];
+  var SLIDES = [{ id: 's-hero' }];
+  for (var sc = 0; sc < window.WT_STORY.count; sc++) SLIDES.push({ id: 's-story', scene: sc });
+  SLIDES.push({ id: 's-explorer', tab: 'arms' }, { id: 's-explorer', tab: 'mu' }, { id: 's-explorer', tab: 'priv' },
+    { id: 's-explorer', tab: 'events' }, { id: 's-take' });
   var pres = { on: false, i: 0, fs: false };
   el('pb-dots').innerHTML = SLIDES.map(function () { return '<i></i>'; }).join('');
   function applySlide() {
     var s = SLIDES[pres.i];
     [].forEach.call(document.querySelectorAll('.slide'), function (n) { n.classList.toggle('active', n.id === s.id); });
     if (s.tab) { state.tab = s.tab; renderExplorer(); }
+    if (s.scene !== undefined) window.WT_STORY.show(s.scene);
+    el('pb-replay').hidden = s.scene === undefined;
     [].forEach.call(el('pb-dots').children, function (d, k) { d.classList.toggle('on', k === pres.i); });
     el('pb-prev').disabled = pres.i === 0; el('pb-next').disabled = pres.i === SLIDES.length - 1;
     window.scrollTo(0, 0);
@@ -376,12 +370,14 @@
   el('present-btn').addEventListener('click', startPresent);
   el('pb-next').addEventListener('click', function () { go(1); });
   el('pb-prev').addEventListener('click', function () { go(-1); });
+  el('pb-replay').addEventListener('click', function () { window.WT_STORY.replay(); });
   el('pb-exit').addEventListener('click', endPresent);
   document.addEventListener('fullscreenchange', function () { if (pres.on && pres.fs && !document.fullscreenElement) endPresent(); });
   document.addEventListener('keydown', function (e) {
     if (!pres.on) return;
     var t = e.target && e.target.tagName;
     if (e.key === 'Escape') { endPresent(); return; }
+    if ((e.key === 'r' || e.key === 'R') && SLIDES[pres.i].scene !== undefined) { window.WT_STORY.replay(); return; }
     if (t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA') return;
     if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].indexOf(e.key) >= 0) { e.preventDefault(); go(1); }
     else if (['ArrowLeft', 'ArrowUp', 'PageUp'].indexOf(e.key) >= 0) { e.preventDefault(); go(-1); }
