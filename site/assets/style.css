@@ -177,6 +177,7 @@ tr.changed td { background: color-mix(in srgb, var(--warm) 14%, transparent); }
 .step { position: relative; padding: 18px 18px 18px 64px; counter-increment: s; }
 .step::before { content: counter(s); position: absolute; left: 18px; top: 18px; width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 14px; display: grid; place-items: center; }
 .step h3 { font-size: 16px; font-weight: 650; }
+.step { overflow-wrap: anywhere; }
 .step p { color: var(--muted); font-size: 15px; margin-top: 2px; }
 .code { position: relative; margin-top: 10px; background: var(--code-bg); border-radius: 10px; }
 .code pre { margin: 0; padding: 12px 84px 12px 14px; overflow-x: auto; font: 400 13.5px/1.55 var(--font-mono); }
@@ -225,7 +226,9 @@ html.presenting .take-col li { font-size: 20px; }
 .story:focus-visible { outline: 2px solid var(--accent); }
 .stage { width: 100%; height: auto; display: block; background: var(--panel); border-radius: 12px; transition: opacity .16s; }
 .stage.swap { opacity: 0; }
-.narr { display: grid; gap: 14px; align-content: start; }
+.narr { display: flex; flex-direction: column; gap: 14px; }
+#st-result { margin-top: auto; padding-top: 6px; }
+.stage-wrap { align-self: center; min-width: 0; }
 .kicker { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
 .narr h3 { font-size: 26px; line-height: 1.18; font-weight: 700; letter-spacing: -.02em; }
 .lines { display: grid; gap: 10px; color: var(--muted); font-size: 16.5px; }
@@ -244,14 +247,16 @@ html.presenting .take-col li { font-size: 20px; }
 .ctl label { font-size: 13.5px; font-weight: 500; color: var(--muted); }
 .ctl input { width: 100%; accent-color: var(--accent); }
 .ctl .ticks { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.ctl .cap { font-size: 15px; min-height: 3.2em; }
+.ctl .cap { font-size: 15px; min-height: 4.8em; }
 .story-bar { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; border-top: 1px solid var(--border); padding-top: 14px; }
 .sctl { display: flex; flex-wrap: wrap; gap: 8px; }
 .ghost:disabled { opacity: .45; cursor: default; }
 .ghost[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
-.sdots { display: flex; flex-wrap: wrap; gap: 8px; }
-.sdots button { width: 14px; height: 14px; border-radius: 50%; border: 0; padding: 0; background: var(--border); cursor: pointer; transition: transform .2s, background .2s; }
-.sdots button[aria-current="true"] { background: var(--accent); transform: scale(1.3); }
+.sdots { display: flex; flex-wrap: wrap; gap: 0; }
+.sdots button { position: relative; width: 26px; height: 26px; border: 0; padding: 0; background: none; cursor: pointer; }
+.sdots button::after { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: var(--border); transition: transform .2s, background .2s; }
+.sdots button:hover::after { background: var(--muted); }
+.sdots button[aria-current="true"]::after { background: var(--accent); transform: scale(1.35); }
 
 /* story scenes: shapes read their colours from the theme tokens */
 .stage text { font: 600 15px var(--font-sans); fill: var(--fg); }
@@ -347,6 +352,15 @@ html.presenting .stage text.note { font-size: 15px; }
   .result-line { font-size: 13px; }
   .tile .v { font-size: 38px; }
   :root { --lab: clamp(96px, 34%, 140px); --val: 56px; }
+}
+@media (max-width: 640px) {
   #present-btn { display: none; }
+  /* the diagrams scale down with the card, so their text is enlarged to stay readable on a phone */
+  .stage text { font-size: 22px; }
+  .stage text.note { font-size: 22px; }
+  .stage text.opt { display: none; }
+  .stage text.head { font-size: 28px; }
+  .stage text.head.sm { font-size: 25px; }
+  .stage text.lane, .stage text.bar-val, .stage text.alarm { font-size: 22px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
