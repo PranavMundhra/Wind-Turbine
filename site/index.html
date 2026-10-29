@@ -190,11 +190,34 @@
   <section class="view" id="view-test" role="tabpanel" aria-labelledby="tab-test" hidden>
     <div class="hero">
       <h1>Test a turbine</h1>
-      <p class="lead">Enter one 10-minute reading from a turbine, or start from an example, and see how a simplified version of the detection steps would treat it.</p>
+      <p class="lead">Replay a month of real readings from turbine 35 of Wind Farm C, ten minutes at a time. Each unusual reading pushes the criticality counter up and each usual one lets it fall. If it reaches the threshold, the alarm sounds. If not, the dashboard stays quiet.</p>
+      <span class="chip"><i></i>Real CARE to Compare readings. No trained model runs here: the flag for each reading comes from a simple stand-in score, explained below.</span>
     </div>
-    <div class="card t-card">
-      <form class="t-form" id="t-form" novalidate aria-label="Turbine reading"></form>
-      <aside class="detail t-res" id="t-result" aria-live="polite"></aside>
+    <div class="card sim" id="sim-dash">
+      <div class="sim-ctl">
+        <div class="field"><label for="sim-snap">Month to replay</label><select id="sim-snap"></select></div>
+        <div class="field"><label for="sim-date">Start monitoring on</label><input type="date" id="sim-date"></div>
+        <div class="field"><span class="sim-lab">Speed</span><div class="seg" id="sim-speed" role="group" aria-label="Replay speed"></div></div>
+        <div class="field sim-th"><label for="sim-theta">Alarm threshold: <b id="sim-thv"></b></label><input type="range" id="sim-theta" min="24" max="144" step="6"></div>
+        <div class="sim-btns"><button type="button" class="t-go" id="sim-play">Play</button><button type="button" class="ghost" id="sim-reset">Reset</button><button type="button" class="ghost" id="sim-mute" aria-pressed="false">Sound on</button></div>
+      </div>
+      <p class="sub" id="sim-note"></p>
+      <div class="sim-status" aria-live="polite">
+        <div class="sim-pill" id="sim-state">Ready</div>
+        <div class="sim-meter"><div class="sim-mtop"><span id="sim-when"></span><span>counter <b id="sim-c">0</b> / <span id="sim-th"></span></span></div><div class="bar-t"><div class="bar-f" id="sim-bar"></div></div></div>
+      </div>
+      <p class="sim-reading" id="sim-reading"></p>
+      <canvas class="sim-cv" id="sim-cv1" aria-label="Sensor reading over the month with its usual range"></canvas>
+      <canvas class="sim-cv" id="sim-cv2" aria-label="Criticality counter over the month"></canvas>
+      <p class="sub" id="sim-sum"></p>
+    </div>
+    <div class="section">
+      <h2>How the replay works</h2>
+      <div class="notes">
+        <div class="card note"><b>The readings</b><span>Four 30-day windows from turbine 35: the prediction window of a labelled fault event, the same month a year earlier, a normal month with a close call, and a window ending in a labelled normal event. Dates are the benchmark's anonymised ones.</span></div>
+        <div class="card note"><b>The flag</b><span>A reading is flagged when sensor_210 sits outside its usual range for that wind speed and time of year, measured on the turbine's own normal training year. The range is set so that 1% of healthy training readings fall outside it, the same 99% rule as the project's thresholds. This stands in for the autoencoder, whose trained weights are not published here.</span></div>
+        <div class="card note"><b>The counter and the threshold</b><span>Normal-status readings add 1 when flagged and subtract 1 otherwise, never going below zero. Service, downtime and other statuses leave it unchanged and are drawn in grey. The default threshold is 72 readings, about 12 hours at 10-minute resolution, as in the benchmark. It counts readings, not days, so it does not need changing for a month-long window. The slider shows what a stricter or looser threshold would do.</span></div>
+      </div>
     </div>
   </section>
 
@@ -212,6 +235,7 @@
 <script src="data.js"></script>
 <script src="assets/story.js"></script>
 <script src="assets/maths.js"></script>
+<script src="sim_data.js"></script>
 <script src="assets/simulator.js"></script>
 <script src="assets/app.js"></script>
 </body>

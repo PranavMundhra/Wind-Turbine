@@ -342,6 +342,7 @@
     });
     el('present-btn').hidden = view !== 'present';
     if (view === 'present' && window.WT_STORY) window.WT_STORY.relayout();
+    if (view === 'test' && window.WT_SIMULATOR) window.WT_SIMULATOR.redraw();
   }
   [].forEach.call(document.querySelectorAll('.tab'), function (b) {
     b.addEventListener('click', function () { location.hash = b.dataset.view; });

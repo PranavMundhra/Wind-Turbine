@@ -84,6 +84,24 @@ def test_turbine_simulator_scores_the_same_statuses_as_the_runs():
 def test_page_only_references_files_that_exist():
     html = (SITE / "index.html").read_text(encoding="utf-8")
     local = re.findall(r'(?:src|href)="((?!https?:|data:|#)[^"]+)"', html)
-    assert {"data.js", "assets/story.js", "assets/maths.js", "assets/simulator.js", "assets/app.js", "assets/style.css"} <= set(local)
+    assert {"data.js", "assets/story.js", "assets/maths.js", "assets/simulator.js", "sim_data.js", "assets/app.js", "assets/style.css"} <= set(local)
     for ref in local:
         assert (SITE / ref).is_file(), f"site/index.html references missing file {ref}"
+
+
+def test_turbine_replay_alarms_only_on_the_fault_window():
+    """Replaying the CARE counter on each committed snapshot reaches the default threshold only for the fault window."""
+    sim = json.loads(re.sub(r"^window\.WT_SIM = |;\s*$", "", (SITE / "sim_data.js").read_text(encoding="utf-8")))
+    assert sim["normal_status"] == [0, 2] and sim["theta_default"] == 72
+    kinds = set()
+    for s in sim["snapshots"]:
+        n = len(s["t"])
+        assert n > 2000 and all(len(s[k]) == n for k in ("status", "flag", "sensor", "wind", "power", "lo", "hi", "split"))
+        c = peak = 0
+        for status, flag in zip(s["status"], s["flag"]):
+            if status in sim["normal_status"]:
+                c = c + 1 if flag else max(c - 1, 0)
+            peak = max(peak, c)
+        assert (peak >= sim["theta_default"]) == (s["kind"] == "fault"), s["key"]
+        kinds.add(s["kind"])
+    assert kinds == {"fault", "normal"}

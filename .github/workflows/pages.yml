@@ -24,7 +24,7 @@ jobs:
           python-version: "3.11"
       - run: python site/build_data.py --check
       - uses: actions/configure-pages@v5
-      - run: mkdir _site && cp -r site/index.html site/data.js site/assets _site/
+      - run: mkdir _site && cp -r site/index.html site/data.js site/sim_data.js site/assets _site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
