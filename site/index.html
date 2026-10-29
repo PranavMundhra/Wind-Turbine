@@ -214,7 +214,7 @@
     <div class="section">
       <h2>How the replay works</h2>
       <div class="notes">
-        <div class="card note"><b>The readings</b><span>Four 30-day windows from turbine 35: the prediction window of a labelled fault event, the same month a year earlier, a normal month with a close call, and a window ending in a labelled normal event. Dates are the benchmark's anonymised ones.</span></div>
+        <div class="card note"><b>The readings</b><span>Five 30-day windows from turbine 35: the prediction window of a labelled fault event, a month that runs into that fault and alarms only at the very end, the same month a year earlier, a normal month with a close call, and a window ending in a labelled normal event. Dates are the benchmark's anonymised ones.</span></div>
         <div class="card note"><b>The flag</b><span>A reading is flagged when sensor_210 sits outside its usual range for that wind speed and time of year, measured on the turbine's own normal training year. The range is set so that 1% of healthy training readings fall outside it, the same 99% rule as the project's thresholds. This stands in for the autoencoder, whose trained weights are not published here.</span></div>
         <div class="card note"><b>The counter and the threshold</b><span>Normal-status readings add 1 when flagged and subtract 1 otherwise, never going below zero. Service, downtime and other statuses leave it unchanged and are drawn in grey. The default threshold is 72 readings, about 12 hours at 10-minute resolution, as in the benchmark. It counts readings, not days, so it does not need changing for a month-long window. The slider shows what a stricter or looser threshold would do.</span></div>
       </div>
