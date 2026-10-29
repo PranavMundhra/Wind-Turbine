@@ -435,6 +435,29 @@ html.presenting .stage text.note { font-size: 15px; }
 .turb:not([data-c="0"]):not([data-c="1"]) { border-color: var(--accent); background: var(--accent-soft); }
 .m-verify td.n, .m-verify th { text-align: right; }
 .m-verify td:first-child, .m-verify th:first-child { text-align: left; }
+/* Test a turbine tab */
+.t-card { padding: 20px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; box-shadow: var(--shadow); }
+.t-card > *, .t-form > *, .t-ex > *, .t-group > * { min-width: 0; }
+.t-form { display: grid; gap: 16px; align-content: start; }
+.t-ex, .t-group { display: grid; gap: 6px; }
+.t-ex { gap: 10px; }
+.t-glabel { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.t-field label { color: var(--fg); font-size: 14px; font-weight: 600; }
+.t-unit { color: var(--muted); font-weight: 400; }
+.t-field input, .t-field select { width: 100%; min-width: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--fg); font-size: 15px; }
+.t-field input[aria-invalid="true"] { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad); }
+.t-help { font-size: 12.5px; }
+.t-err { font-size: 13.5px; font-weight: 500; color: var(--bad); }
+.t-err:empty { display: none; }
+.t-go { border: 0; border-radius: 999px; padding: 8px 18px; background: var(--accent); color: var(--accent-ink); font-size: 14px; font-weight: 600; cursor: pointer; }
+.t-go:hover { filter: brightness(1.08); }
+.t-res .meter { grid-template-columns: 70px minmax(0, 1fr) 64px; }
+.t-res .bar-f.over { background: var(--bad); }
+.t-res.stale > :not(.t-stale) { opacity: .45; }
+@media (max-width: 820px) { .t-card { grid-template-columns: minmax(0, 1fr); padding: 16px; } }
+/* four tabs no longer fit on one line of a phone */
+@media (max-width: 520px) { .tabs { display: grid; grid-template-columns: 1fr 1fr; width: 100%; border-radius: 18px; } .tab { padding: 8px 10px; } }
+
 @media (max-width: 900px) { .m-grid { grid-template-columns: minmax(0, 1fr); } .m-sec { padding: 16px; } }
 @media (max-width: 560px) { .formula { padding: 8px 10px; } .formula math { font-size: 1em; } .m-head h2 { font-size: 19px; } }
 

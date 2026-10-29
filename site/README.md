@@ -1,8 +1,9 @@
 # Demo site
 
-A static page with three sections: **Reproduce** (how to use this repository), **Present** (an animated,
-plain-language story of every experiment, then an interactive results explorer, with a full-screen mode for talks)
-and **CARE maths** (every formula behind the score, with calculators). No build step and no dependencies.
+A static page with four sections: **Reproduce** (how to use this repository), **Present** (an animated,
+plain-language story of every experiment, then an interactive results explorer, with a full-screen mode for talks),
+**CARE maths** (every formula behind the score, with calculators) and **Test a turbine** (type in one reading or pick an
+example and see how a simplified, made-up version of the detection steps treats it). No build step and no dependencies.
 
 Every number comes from `data.js`, which `build_data.py` generates from the committed files in `results/paper/`
 (Table I, `bootstrap_vs_D.csv`, and for every seed each run's `results.json` and `per_event.csv`, plus `privacy.json`).
@@ -28,3 +29,8 @@ GitHub Actions).
 - `assets/app.js`: the results explorer, the reproduction guide and the full-screen presenter.
 - `assets/maths.js`: the CARE maths tab. Formulas are MathML; the calculators apply the same rules as `src/windturbine/scoring/`
   to made-up examples, and the real-data widgets read the committed runs.
+- `assets/simulator.js`: the Test a turbine tab. It is a deterministic simulation, not inference: the trained weights
+  are not committed, so it compares the three named channels of Wind Farm C (wind speed, power, reactive power) with the
+  EDA notebook's theoretical power curve and typical reactive power, using made-up tolerances. It borrows the real
+  pipeline's status gate, q-quantile threshold rule and counter threshold, and `tests/test_site_data.py` checks the
+  input-schema facts it quotes against the committed run manifests. Its examples are synthetic.

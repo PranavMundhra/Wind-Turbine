@@ -336,7 +336,7 @@
 
   /* ---------- views and theme ---------- */
   function show(view) {
-    ['present', 'reproduce', 'maths'].forEach(function (v) {
+    ['present', 'reproduce', 'maths', 'test'].forEach(function (v) {
       el('view-' + v).hidden = v !== view;
       el('tab-' + v).setAttribute('aria-selected', v === view);
     });
@@ -346,7 +346,7 @@
   [].forEach.call(document.querySelectorAll('.tab'), function (b) {
     b.addEventListener('click', function () { location.hash = b.dataset.view; });
   });
-  function route() { show(location.hash === '#reproduce' ? 'reproduce' : location.hash === '#maths' ? 'maths' : 'present'); }
+  function route() { show(location.hash === '#reproduce' ? 'reproduce' : location.hash === '#maths' ? 'maths' : location.hash === '#test' ? 'test' : 'present'); }
   window.addEventListener('hashchange', route);
 
   function isDark() {
