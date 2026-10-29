@@ -16,11 +16,12 @@ jobs:
         env:
           KERAS_BACKEND: torch
           FLWR_TELEMETRY_ENABLED: "0"
+      # The demo site must match the committed run files. This runs before the step below, which rewrites
+      # results/paper/bootstrap_vs_D.csv with fewer draws than the committed file.
+      - run: python site/build_data.py --check
       # Table I must still rebuild exactly from the committed run files.
       - run: python -m windturbine summarise --runs results/paper --out results/paper --boot 200
       - run: git diff --exit-code -- results/paper/table_I.md
-      # The demo site must still match the committed run files.
-      - run: python site/build_data.py --check
       # The walkthrough notebook must still run end to end on the committed files.
       - run: pip install nbclient ipykernel
       - run: >-
