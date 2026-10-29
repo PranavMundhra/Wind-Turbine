@@ -11,9 +11,7 @@
   const pct = (x) => num(+(x * 100).toFixed(1)) + '%';
   const pts = (d) => { const v = Math.round(d * 100); return (v > 0 ? '+' : '') + num(v) + ' pts'; };
 
-  // Pipeline facts, checked by tests/test_site_data.py.
-  const N_INPUTS = 243, N_ANGLES = 5;   // the model input schema in results/paper/*/manifest.json
-  const NORMAL_STATUS = [0, 2];         // normal_status_ids in src/windturbine/config.py
+  const NORMAL_STATUS = [0, 2];         // normal_status_ids in src/windturbine/config.py, checked by tests/test_site_data.py
   // Illustrative choices. The power curve is the theoretical one in notebooks/01_eda.ipynb, and the usual reactive power
   // is the mean and spread of reactive_power_122_avg over the 368,614 normal-status readings that notebook summarises.
   const CURVE = { cutIn: 3, rated: 13, cutOut: 25 };
@@ -94,9 +92,8 @@
   }
 
   /* ---------- result ---------- */
-  const DISCLAIMER = '<p class="small">Simulated with a fixed, made-up rule, not the trained models. It has no measured accuracy and cannot tell whether or when a fault will happen.</p>';
   let shown = false;
-  const placeholder = (msg) => { shown = false; $('t-result').classList.remove('stale'); $('t-result').innerHTML = '<h3>Result</h3><p class="small">' + msg + '</p>' + DISCLAIMER; };
+  const placeholder = (msg) => { shown = false; $('t-result').classList.remove('stale'); $('t-result').innerHTML = '<h3>Result</h3><p class="small">' + msg + '</p>'; };
   const meter = (name, g, val) => '<div class="meter"><span>' + name + '</span><div class="bar-t"><div class="bar-f' + (Math.abs(g) > TAU ? ' over' : '') +
     '" style="width:' + (Math.min(Math.abs(g) / TAU, 1) * 100).toFixed(1) + '%"></div></div><b>' + val + '</b></div>';
 
@@ -131,7 +128,7 @@
       '<div>' + tag + '</div><p>' + why + '</p>' +
       (s.kind === 'skipped' ? '' : '<p class="small">How far each value is from usual, in percentage points of rated power. A full bar is enough to flag the reading on its own.</p>' +
         '<div class="meters">' + meter('Power', s.gp, pts(r.power - s.expected)) + meter('Reactive', s.gq, pts(r.reactive - REACTIVE.usual)) + '</div>') +
-      (next ? '<p class="small">' + next + '</p>' : '') + DISCLAIMER;
+      (next ? '<p class="small">' + next + '</p>' : '');
     shown = true;
     // On a phone the result sits below the form, so bring it into view under the sticky header.
     const top = $('t-result').getBoundingClientRect().top;
@@ -164,22 +161,6 @@
   });
   $('t-form').addEventListener('reset', () => { FIELDS.forEach((f) => setError(f, '')); press(-1); placeholder('Pick an example, or enter a reading and press <b>Test turbine</b>.'); });
   placeholder('Pick an example, or enter a reading and press <b>Test turbine</b>.');
-
-  /* ---------- how it compares with the real pipeline ---------- */
-  const share = +((1 - Q) * 100).toFixed(2);
-  $('t-notes').innerHTML = [
-    ['What this page does', 'It compares power output with the repository’s theoretical power curve (cut-in ' + CURVE.cutIn + ' m/s, rated ' + CURVE.rated + ' m/s, cut-out ' +
-      CURVE.cutOut + ' m/s), and reactive power with its usual level of ' + pct(REACTIVE.usual) + ' ± ' + pct(REACTIVE.spread) + ' (the mean and spread of 368,614 normal-status readings summarised in notebooks/01_eda.ipynb). ' +
-      'The power gap is divided by ' + Math.round(POWER_SPREAD * 100) + ' points, a made-up tolerance, and the reactive gap by ' + +(REACTIVE.spread * 100).toFixed(1) + ' points. The score is the length of the two scaled gaps together. ' +
-      'The threshold, ' + TAU.toFixed(2) + ', is the score that only ' + share + '% of healthy readings would exceed under the simulation’s own assumption that healthy gaps follow a bell curve: the same ' + Q + '-quantile rule the real thresholds use.'],
-    ['What the real models read', N_INPUTS + ' numbers per reading: ' + (N_INPUTS - N_ANGLES) + ' ten-minute averages, with each of the ' + N_ANGLES + ' angle channels turned into a sine and a cosine. ' +
-      'Wind Farm C names only its wind-speed, power and reactive-power channels; the rest are anonymised as sensor_0, sensor_1 and so on, which is why the form asks for three values. ' +
-      'Each turbine standardises every channel with the mean and spread of its own training readings, and a missing value becomes that mean.'],
-    ['How the real models score it', 'An autoencoder trained only on that turbine’s healthy readings tries to rebuild all ' + N_INPUTS + ' numbers, and the size of the miss is the score. ' +
-      'Each turbine’s threshold is the ' + Q + ' quantile of its scores on held-out healthy readings, and a counter turns flagged readings into alarms. <a href="#maths">CARE maths</a> shows both steps.'],
-    ['Why there is no real result here', 'The trained weights are not stored in the repository and the CARE to Compare data are not redistributed, so this page cannot run the models, and the simulation has no accuracy figure. ' +
-      'The scores in <a href="#present">Present</a> measure how well the real models flagged past, labelled events. A flagged reading means the readings look unusual, not that a fault will happen.']
-  ].map((n) => '<div class="card note"><b>' + n[0] + '</b><span>' + n[1] + '</span></div>').join('');
 
   // Self-check: every example must still give the outcome its group promises.
   PRESETS.forEach((p) => console.assert(simulate({ status: p.status, wind: p.wind, power: p.power / 100, reactive: p.reactive / 100 }).kind === p.expect,

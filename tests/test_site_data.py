@@ -71,18 +71,14 @@ def test_constants_on_the_page_come_from_the_scoring_config(data):
     assert care == {"beta": 0.5, "score_quantile": 0.99, "criticality_threshold": 72, "weights": [1, 1, 1, 2]}
 
 
-def test_turbine_simulator_states_the_pipeline_facts():
-    """The Test a turbine tab quotes the model's input schema and the scored statuses; every committed run must agree."""
+def test_turbine_simulator_scores_the_same_statuses_as_the_runs():
+    """The Test a turbine tab scores only the normal statuses; every committed run must agree."""
     js = (SITE / "assets" / "simulator.js").read_text(encoding="utf-8")
-    n_inputs, n_angles = (int(v) for v in re.search(r"N_INPUTS = (\d+), N_ANGLES = (\d+)", js).groups())
     normal = json.loads(re.search(r"NORMAL_STATUS = (\[[\d, ]*\])", js).group(1))
     manifests = sorted(ROOT.glob("results/paper/*/s*/manifest.json"))
     assert manifests
     for path in manifests:
-        manifest = json.loads(path.read_text(encoding="utf-8"))
-        assert len(manifest["schema"]) == n_inputs, path
-        assert sum(c.endswith("__sin") for c in manifest["schema"]) == n_angles, path
-        assert manifest["config"]["normal_status_ids"] == normal, path
+        assert json.loads(path.read_text(encoding="utf-8"))["config"]["normal_status_ids"] == normal, path
 
 
 def test_page_only_references_files_that_exist():

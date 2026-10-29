@@ -32,5 +32,5 @@ GitHub Actions).
 - `assets/simulator.js`: the Test a turbine tab. It is a deterministic simulation, not inference: the trained weights
   are not committed, so it compares the three named channels of Wind Farm C (wind speed, power, reactive power) with the
   EDA notebook's theoretical power curve and typical reactive power, using made-up tolerances. It borrows the real
-  pipeline's status gate, q-quantile threshold rule and counter threshold, and `tests/test_site_data.py` checks the
-  input-schema facts it quotes against the committed run manifests. Its examples are synthetic.
+  pipeline's status gate, q-quantile threshold rule and counter threshold, and `tests/test_site_data.py` checks its
+  scored statuses against the committed run manifests. Its examples are synthetic.
