@@ -26,6 +26,8 @@ BINS = np.arange(0, 42, 2)
 SNAPSHOTS = [
     ("fault", "fault", "2027-02-01", "Fault event, February", "fault",
      "The prediction window of a labelled fault event. sensor_210 runs far below its usual level for the wind."),
+    ("late", "fault", "2027-01-02 13:00", "Fault building up", "fault",
+     "A normal month that runs into the start of the fault event. The alarm comes only in the last hours."),
     ("before", "fault", "2026-02-01", "Same turbine, a year earlier", "normal",
      "The same calendar month in the turbine's normal training year."),
     ("close", "fault", "2026-12-01", "A close call", "normal",

@@ -29,7 +29,7 @@ GitHub Actions).
 - `assets/app.js`: the results explorer, the reproduction guide and the full-screen presenter.
 - `assets/maths.js`: the CARE maths tab. Formulas are MathML; the calculators apply the same rules as `src/windturbine/scoring/`
   to made-up examples, and the real-data widgets read the committed runs.
-- `assets/simulator.js` and `sim_data.js`: the Test a turbine tab. `sim_data.js` holds four 30-day windows of real
+- `assets/simulator.js` and `sim_data.js`: the Test a turbine tab. `sim_data.js` holds five 30-day windows of real
   readings from turbine 35 (events 48 and 67), built by `build_sim_data.py` on a machine with the raw CARE to Compare
   files, which are not in this repository. No trained model runs: each reading is flagged by a stand-in score
   (one sensor against its usual range at the same wind speed and season, with the 99% rule), and the page applies

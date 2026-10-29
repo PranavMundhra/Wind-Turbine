@@ -9,8 +9,8 @@
   const $ = (id) => document.getElementById(id);
   const NORMAL_STATUS = [0, 2];         // normal_status_ids in src/windturbine/config.py, checked by tests/test_site_data.py
   const STATUS = ['Normal operation', 'Derated', 'Idling', 'Service mode', 'Down', 'Other'];
-  const SPEEDS = [['Slow', 3], ['Normal', 12], ['Fast', 48]];
-  const st = { snap: SIM.snapshots[0], i0: 0, i: 0, c: 0, peak: 0, alarmAt: -1, playing: false, raf: 0, speed: 12, theta: SIM.theta_default, muted: false };
+  const SPEEDS = [['Slow', 0.5], ['Normal', 12], ['Fast', 48]];   // readings per animation frame
+  const st = { snap: SIM.snapshots[0], i0: 0, i: 0, c: 0, peak: 0, alarmAt: -1, playing: false, raf: 0, speed: 12, acc: 0, theta: SIM.theta_default, muted: false };
 
   const fmtTime = (s, k) => { const d = new Date(new Date(s.start.replace(' ', 'T') + 'Z').getTime() + s.t[k] * 600000); return d.toISOString().slice(0, 16).replace('T', ' '); };
   const dateOf = (s, k) => fmtTime(s, k).slice(0, 10);
@@ -33,7 +33,7 @@
     return 0;
   }
   function reset() {
-    stop(); st.i0 = st.i = startIndex(); st.c = 0; st.peak = 0; st.alarmAt = -1;
+    stop(); st.i0 = st.i = startIndex(); st.c = 0; st.acc = 0; st.peak = 0; st.alarmAt = -1;
     $('sim-dash').classList.remove('alarm', 'done'); draw(); panel();
   }
 
@@ -46,7 +46,8 @@
     st.i++;
   }
   function frame() {
-    for (let n = 0; n < st.speed && st.i < st.snap.t.length; n++) step();
+    st.acc += st.speed;   // fractional speeds advance one reading every few frames
+    for (; st.acc >= 1 && st.i < st.snap.t.length; st.acc--) step();
     draw(); panel();
     if (st.i >= st.snap.t.length) { stop(); $('sim-dash').classList.add('done'); panel(); return; }
     st.raf = requestAnimationFrame(frame);
